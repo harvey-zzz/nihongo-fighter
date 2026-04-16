@@ -10,7 +10,7 @@ import { getBattlePresentation } from "./lib/battle-presentation.js";
 import { calculateCharacterStats, getStoredProgress, recordBattleProgress, saveStoredProgress } from "./lib/progression.js";
 import { getOrderedCharacters, shouldRunBattleTimer } from "./lib/ui-flow.js";
 import { createLesson } from "./lib/lessons.js";
-import { renderWithFuriganaJSX } from "./lib/furigana.js";
+import { renderWithFuriganaJSX } from "./lib/furigana.jsx";
 
 // --- Components ---
 
