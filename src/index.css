@@ -1,0 +1,441 @@
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Noto+Sans+TC:wght@400;700;900&family=JetBrains+Mono:wght@400;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Noto Sans TC", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  --font-display: "Press Start 2P", "Noto Sans TC", monospace;
+}
+
+@layer base {
+  :root {
+    --arcade-bg: #03040e;
+    --arcade-bg-soft: #080c1e;
+    --arcade-panel: rgba(6, 10, 26, 0.92);
+    --arcade-panel-strong: rgba(4, 7, 18, 0.96);
+    --arcade-line: rgba(120, 237, 255, 0.35);
+    --arcade-grid: rgba(87, 99, 154, 0.22);
+    --arcade-cyan: #00f5ff;
+    --arcade-cyan-strong: #00d4e8;
+    --arcade-pink: #ff0099;
+    --arcade-pink-strong: #e6007a;
+    --arcade-yellow: #ffe600;
+    --arcade-amber: #ffb44f;
+    --arcade-text: #f0f6ff;
+    --arcade-text-dim: #8090c0;
+    --arcade-danger: #ff2040;
+    --arcade-success: #00ffb3;
+    --arcade-shadow: 0 0 0 1px rgba(0, 245, 255, 0.15), 0 0 0 2px rgba(0, 0, 0, 0.8), 0 24px 60px rgba(0, 0, 0, 0.6);
+    --arcade-glow-cyan: 0 0 20px rgba(0, 245, 255, 0.4), 0 0 60px rgba(0, 245, 255, 0.15);
+    --arcade-glow-pink: 0 0 20px rgba(255, 0, 153, 0.4), 0 0 60px rgba(255, 0, 153, 0.15);
+    --arcade-glow-yellow: 0 0 20px rgba(255, 230, 0, 0.5), 0 0 40px rgba(255, 230, 0, 0.2);
+    --pixel-border: 2px solid rgba(0, 245, 255, 0.8);
+  }
+
+  html {
+    background: var(--arcade-bg);
+  }
+
+  body {
+    min-height: 100vh;
+    color: var(--arcade-text);
+    overflow: hidden;
+    background:
+      /* pixel grid */
+      linear-gradient(to right, rgba(0, 245, 255, 0.04) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(0, 245, 255, 0.04) 1px, transparent 1px),
+      /* radial glows */
+      radial-gradient(ellipse at 50% 0%, rgba(0, 245, 255, 0.18) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 100%, rgba(255, 0, 153, 0.18) 0%, transparent 50%),
+      var(--arcade-bg);
+    background-size: 40px 40px, 40px 40px, auto, auto, auto;
+    text-rendering: optimizeLegibility;
+  }
+}
+
+body {
+  @apply antialiased;
+}
+
+/* =========================================
+   CRT / SCANLINE OVERLAYS
+   ========================================= */
+
+/* Global CRT scanline effect — sits on top of everything */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.18) 2px,
+    rgba(0, 0, 0, 0.18) 4px
+  );
+}
+
+/* Corner vignette */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9998;
+  background: radial-gradient(
+    ellipse at 50% 50%,
+    transparent 60%,
+    rgba(0, 0, 0, 0.55) 100%
+  );
+}
+
+/* =========================================
+   SCROLLBAR
+   ========================================= */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: rgba(3, 4, 14, 0.95); }
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--arcade-cyan), var(--arcade-pink));
+}
+
+/* =========================================
+   KEYFRAME ANIMATIONS
+   ========================================= */
+@keyframes blink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+@keyframes glitch-h {
+  0%, 90%, 100% { transform: translateX(0); }
+  91% { transform: translateX(-3px); clip-path: inset(10% 0 80% 0); }
+  93% { transform: translateX(3px); clip-path: inset(70% 0 10% 0); }
+  95% { transform: translateX(-2px); clip-path: inset(40% 0 40% 0); }
+  97% { transform: translateX(0); }
+}
+
+@keyframes title-drift {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(0, -4px, 0); }
+}
+
+@keyframes title-glow-pulse {
+  0%, 100% { opacity: 0.72; transform: scaleX(0.98); }
+  50% { opacity: 1; transform: scaleX(1); }
+}
+
+@keyframes scanline-sweep {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(200%); }
+}
+
+@keyframes rgb-shift {
+  0%, 100% { text-shadow: -2px 0 var(--arcade-pink), 2px 0 var(--arcade-cyan), 0 0 20px rgba(0, 245, 255, 0.4); }
+  25% { text-shadow: 2px 0 var(--arcade-pink), -2px 0 var(--arcade-cyan), 0 0 30px rgba(0, 245, 255, 0.6); }
+  50% { text-shadow: -1px 0 var(--arcade-yellow), 1px 0 var(--arcade-pink), 0 0 25px rgba(255, 230, 0, 0.4); }
+  75% { text-shadow: 2px 0 var(--arcade-cyan), -2px 0 var(--arcade-yellow), 0 0 20px rgba(255, 0, 153, 0.4); }
+}
+
+@keyframes hp-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+@keyframes coin-blink {
+  0%, 100% { opacity: 1; color: var(--arcade-yellow); }
+  49% { opacity: 1; color: var(--arcade-yellow); }
+  50%, 98% { opacity: 0; }
+}
+
+@keyframes pixel-fade-in {
+  0% { opacity: 0; transform: scale(0.95); image-rendering: pixelated; }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+/* =========================================
+   CORE ARCADE COMPONENTS
+   ========================================= */
+@layer components {
+
+  /* --- FRAME --- */
+  .arcade-frame {
+    position: relative;
+    isolation: isolate;
+    background:
+      linear-gradient(180deg, rgba(255,255,255,0.03), transparent 20%),
+      var(--arcade-panel);
+    border: 1px solid rgba(0, 245, 255, 0.3);
+    box-shadow:
+      0 0 0 1px rgba(0, 0, 0, 0.8),
+      inset 0 1px 0 rgba(255, 255, 255, 0.06),
+      var(--arcade-shadow);
+    backdrop-filter: blur(12px);
+  }
+
+  /* inner corner accents */
+  .arcade-frame::before {
+    content: "";
+    position: absolute;
+    inset: 5px;
+    border: 1px solid rgba(255, 0, 153, 0.15);
+    pointer-events: none;
+    opacity: 0.8;
+  }
+
+  /* ┌ ┐ corner markers */
+  .arcade-frame::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      linear-gradient(135deg, rgba(0,245,255,0.25) 0%, transparent 12px) top left,
+      linear-gradient(225deg, rgba(0,245,255,0.25) 0%, transparent 12px) top right,
+      linear-gradient(315deg, rgba(0,245,255,0.25) 0%, transparent 12px) bottom right,
+      linear-gradient(45deg,  rgba(0,245,255,0.25) 0%, transparent 12px) bottom left;
+    background-size: 18px 18px;
+    background-repeat: no-repeat;
+  }
+
+  /* --- TITLE (NIHONGO FIGHTER logo text) --- */
+  .arcade-title {
+    font-family: var(--font-display);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    line-height: 1.15;
+    text-shadow:
+      0 0 10px rgba(0, 245, 255, 0.16),
+      0 0 18px rgba(255, 0, 153, 0.1);
+  }
+
+  .arcade-title-hero {
+    position: relative;
+    will-change: transform, opacity;
+    transform: translateZ(0);
+    animation: title-drift 4.8s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+  }
+
+  .arcade-title-hero::after {
+    content: "";
+    position: absolute;
+    left: 8%;
+    right: 8%;
+    bottom: -0.35rem;
+    height: 0.3rem;
+    pointer-events: none;
+    background: linear-gradient(90deg, transparent, rgba(0, 245, 255, 0.85), rgba(255, 0, 153, 0.78), transparent);
+    filter: blur(10px);
+    opacity: 0.8;
+    transform-origin: center;
+    animation: title-glow-pulse 3.2s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+  }
+
+  .arcade-title-review {
+    position: relative;
+    display: inline-block;
+    will-change: transform, opacity;
+    transform: translateZ(0);
+    animation: title-drift 6s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+  }
+
+  .arcade-title-review::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: -0.55rem;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(90deg, rgba(0, 245, 255, 0.9), rgba(255, 0, 153, 0.8));
+    opacity: 0.8;
+    transform-origin: left;
+    animation: title-glow-pulse 3.8s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+  }
+
+  /* --- PANEL HEADING --- */
+  .arcade-panel-heading {
+    font-family: var(--font-display);
+    font-size: 0.65rem;
+    letter-spacing: 0.22em;
+    color: var(--arcade-cyan);
+    text-transform: uppercase;
+    text-shadow: 0 0 12px rgba(0, 245, 255, 0.6);
+  }
+
+  /* --- BUTTON (pixel-bordered) --- */
+  .arcade-button {
+    position: relative;
+    overflow: hidden;
+    border: 2px solid var(--arcade-cyan);
+    background: linear-gradient(180deg,
+      rgba(0, 245, 255, 0.22) 0%,
+      rgba(0, 180, 200, 0.14) 50%,
+      rgba(0, 100, 140, 0.1) 100%
+    );
+    color: #e8fffe;
+    text-shadow: 0 0 8px rgba(0, 245, 255, 0.8);
+    box-shadow:
+      0 0 0 1px rgba(0, 0, 0, 0.8),
+      inset 0 1px 0 rgba(255,255,255,0.12),
+      var(--arcade-glow-cyan);
+    font-family: var(--font-display);
+    font-size: 0.6rem;
+    letter-spacing: 0.12em;
+    transition: all 0.15s ease;
+  }
+
+  .arcade-button:hover {
+    background: linear-gradient(180deg,
+      rgba(0, 245, 255, 0.5) 0%,
+      rgba(0, 245, 255, 0.3) 100%
+    );
+    box-shadow:
+      0 0 0 1px rgba(0, 0, 0, 0.8),
+      inset 0 1px 0 rgba(255,255,255,0.2),
+      0 0 30px rgba(0, 245, 255, 0.6),
+      0 0 60px rgba(0, 245, 255, 0.3);
+    color: #ffffff;
+  }
+
+  /* shimmer sweep */
+  .arcade-button::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%);
+    transform: translateX(-120%);
+    transition: transform 0.45s ease;
+  }
+  .arcade-button:hover::before { transform: translateX(120%); }
+
+  /* --- CHIP --- */
+  .arcade-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 0.8rem;
+    background: linear-gradient(90deg, rgba(0, 245, 255, 0.16), rgba(255, 0, 153, 0.16));
+    border: 1px solid rgba(0, 245, 255, 0.4);
+    color: var(--arcade-text);
+    box-shadow: var(--arcade-glow-cyan);
+    font-family: var(--font-display);
+    font-size: 0.55rem;
+  }
+
+  /* --- STAT BAR --- */
+  .arcade-stat-bar {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(0, 245, 255, 0.2);
+    background: rgba(0, 0, 0, 0.6);
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.8);
+  }
+
+  /* --- CRT OVERLAY (per-component scanlines) --- */
+  .arcade-overlay {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      linear-gradient(180deg, rgba(255,255,255,0.04), transparent 12%, transparent 88%, rgba(0,0,0,0.2)),
+      repeating-linear-gradient(
+        180deg,
+        rgba(255,255,255,0.025) 0,
+        rgba(255,255,255,0.025) 1px,
+        transparent 1px,
+        transparent 3px
+      );
+    mix-blend-mode: screen;
+    opacity: 0.35;
+  }
+
+  /* --- NAMEPLATE (character name label) --- */
+  .arcade-nameplate {
+    background: linear-gradient(90deg, rgba(3, 4, 14, 0.96), rgba(3, 4, 14, 0.7), transparent);
+    border-left: 3px solid var(--arcade-pink);
+    box-shadow: var(--arcade-glow-pink);
+  }
+
+  /* --- FIGHTER PORTRAIT FRAME (SF-style) --- */
+  .arcade-portrait-frame {
+    position: relative;
+    border: 2px solid rgba(0, 245, 255, 0.5);
+    box-shadow:
+      0 0 0 1px rgba(0, 0, 0, 0.9),
+      0 0 0 3px rgba(0, 245, 255, 0.12),
+      inset 0 0 20px rgba(0, 0, 0, 0.5),
+      var(--arcade-glow-cyan);
+    background: #000;
+    overflow: hidden;
+  }
+
+  .arcade-portrait-frame:hover {
+    border-color: var(--arcade-cyan);
+    box-shadow:
+      0 0 0 1px rgba(0,0,0,0.9),
+      0 0 0 3px rgba(0, 245, 255, 0.3),
+      var(--arcade-glow-cyan);
+  }
+
+  /* --- SELECTED PORTRAIT --- */
+  .arcade-portrait-selected {
+    border-color: var(--arcade-yellow) !important;
+    box-shadow:
+      0 0 0 1px rgba(0,0,0,0.9),
+      0 0 0 3px rgba(255, 230, 0, 0.3),
+      var(--arcade-glow-yellow) !important;
+    animation: hp-pulse 1.2s ease-in-out infinite;
+  }
+
+  /* --- BLINKING INSERT COIN --- */
+  .arcade-coin-text {
+    font-family: var(--font-display);
+    font-size: 0.7rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    animation: coin-blink 1.2s step-end infinite;
+    color: var(--arcade-yellow);
+    text-shadow: var(--arcade-glow-yellow);
+  }
+
+  /* --- VS DIVIDER --- */
+  .arcade-vs {
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    color: var(--arcade-yellow);
+    text-shadow: var(--arcade-glow-yellow);
+    letter-spacing: 0.1em;
+  }
+
+  /* --- HP BAR GLOW --- */
+  .arcade-hp-player {
+    background: linear-gradient(90deg, #00b3ff, #00f5ff, #80ffee);
+    box-shadow: 0 0 12px rgba(0, 245, 255, 0.6);
+  }
+  .arcade-hp-enemy {
+    background: linear-gradient(90deg, #ff6600, #ff2200, #ff0044);
+    box-shadow: 0 0 12px rgba(255, 40, 0, 0.6);
+  }
+
+  /* --- PIXEL DIVIDER LINE --- */
+  .arcade-divider {
+    height: 1px;
+    background: linear-gradient(90deg,
+      transparent,
+      rgba(0, 245, 255, 0.6) 20%,
+      rgba(0, 245, 255, 0.6) 80%,
+      transparent
+    );
+    box-shadow: 0 0 8px rgba(0, 245, 255, 0.4);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
