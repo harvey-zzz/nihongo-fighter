@@ -1,6 +1,6 @@
 const PRESENTATIONS = {
   hikaru: {
-    enemy: { name: "TAKA", image: "/characters/taka.png", style: "高壓五段型" },
+    enemy: { name: "TAKA", image: "/characters/taka.jpg", style: "高壓五段型" },
     stageKey: "neon-dojo",
     stageLabel: "霓光道場",
     backdropClassName:
@@ -18,7 +18,7 @@ const PRESENTATIONS = {
       "bg-[radial-gradient(circle_at_center,rgba(96,165,250,0.18),transparent_54%)]",
   },
   kenta: {
-    enemy: { name: "RAITO", image: "/characters/raito.png", style: "反制鏡面型" },
+    enemy: { name: "RAITO", image: "/characters/raito.jpg", style: "反制鏡面型" },
     stageKey: "sealed-court",
     stageLabel: "封印中庭",
     backdropClassName:
@@ -27,7 +27,7 @@ const PRESENTATIONS = {
       "bg-[radial-gradient(circle_at_center,rgba(45,212,191,0.18),transparent_52%)]",
   },
   minami: {
-    enemy: { name: "TAKA", image: "/characters/taka.png", style: "極速判斷型" },
+    enemy: { name: "TAKA", image: "/characters/taka.jpg", style: "極速判斷型" },
     stageKey: "shibuya-cross",
     stageLabel: "霓虹十字路口",
     backdropClassName:
@@ -36,7 +36,7 @@ const PRESENTATIONS = {
       "bg-[radial-gradient(circle_at_center,rgba(217,70,239,0.18),transparent_52%)]",
   },
   taka: {
-    enemy: { name: "KENTA", image: "/characters/kenta.jpg", style: "雙重活用型" },
+    enemy: { name: "HANA", image: "/characters/hana.jpg", style: "雙重活用型" },
     stageKey: "elevated-rail",
     stageLabel: "高架終點站",
     backdropClassName:

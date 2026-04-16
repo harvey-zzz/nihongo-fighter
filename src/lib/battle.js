@@ -30,6 +30,47 @@ const GODAN_QUESTION_RULES = [
 const IRREGULAR_FORMS = new Set(["する", "来る", "くる"]);
 const JLPT_LEVELS = ["N5", "N4", "N3", "N2"];
 
+// 根據變化形式，調整顯示的中文意思
+const FORM_MEANING_TRANSFORMS = {
+  dictionary_form:   (m) => m,
+  masu_form:         (m) => m,                        // 禮貌形，意思不變
+  negative_form:     (m) => `不${m}`,                 // ない形
+  te_form:           (m) => `${m}（て形）`,            // て形
+  ta_form:           (m) => `${m}了`,                 // た形（過去）
+  potential_form:    (m) => `可以${m}`,               // 可能形
+  conditional_form:  (m) => `${m}的話`,               // 仮定形
+  imperative_form:   (m) => `${m}！`,                 // 命令形
+  volitional_form:   (m) => `要${m}吧`,               // 意向形
+  causative:         (m) => `讓人${m}`,               // 使役形
+  passive:           (m) => `被${m}`,                 // 受身形
+  causative_passive: (m) => `被迫${m}`,               // 使役受身形
+};
+
+function getMeaningForForm(meaning, answerKey) {
+  const transform = FORM_MEANING_TRANSFORMS[answerKey];
+  return transform ? transform(meaning) : meaning;
+}
+
+// 分散洗牌：確保同一個動詞在 minGap 題內不重複出現
+function spreadShuffleBySource(questions, minGap = 5) {
+  const pool = shuffleList([...questions]);
+  const result = [];
+
+  while (pool.length > 0) {
+    const recentIds = new Set(result.slice(-minGap).map((q) => q.sourceVerbId));
+    const nextIdx = pool.findIndex((q) => !recentIds.has(q.sourceVerbId));
+
+    if (nextIdx === -1) {
+      // 無法避免重複，直接取下一題
+      result.push(pool.shift());
+    } else {
+      result.push(...pool.splice(nextIdx, 1));
+    }
+  }
+
+  return result;
+}
+
 function shuffleList(list) {
   const next = [...list];
 
@@ -92,7 +133,7 @@ export function describeQuestionDifficulty(verb, specialty, difficultyOverride) 
 
 export function buildQuestionDeck(verbs, specialty) {
   if (specialty === "godan") {
-    return verbs
+    const allQuestions = verbs
       .filter((verb) => verb.verb_family === "godan")
       .flatMap((verb) =>
         GODAN_QUESTION_RULES.filter((rule) => Boolean(verb[rule.answerKey])).map((rule) => ({
@@ -104,12 +145,15 @@ export function buildQuestionDeck(verbs, specialty) {
           promptLabel: rule.promptLabel,
           difficulty: rule.difficulty,
           dictionary_form: verb.dictionary_form,
-          meaning: verb.meaning,
+          reading: verb.reading,
+          meaning: getMeaningForForm(verb.meaning, rule.answerKey),
           jlpt: verb.jlpt,
           timeLimit: calculateQuestionTimeLimit(verb, specialty, rule.difficulty),
           difficultyDescription: describeQuestionDifficulty(verb, specialty, rule.difficulty),
         })),
       );
+    // 分散洗牌：同一動詞至少隔 9 題才再出現
+    return spreadShuffleBySource(allQuestions, 9);
   }
 
   if (specialty === "transitivity") {
@@ -127,6 +171,7 @@ export function buildQuestionDeck(verbs, specialty) {
             promptLabel: "自動詞",
             difficulty: specialtyRule.difficulty,
             dictionary_form: verb.intransitive,
+            reading: verb.reading,
             meaning: verb.meaning,
             jlpt: verb.jlpt,
             options: ["自動詞", "他動詞"],
@@ -143,6 +188,7 @@ export function buildQuestionDeck(verbs, specialty) {
             promptLabel: "他動詞",
             difficulty: specialtyRule.difficulty,
             dictionary_form: verb.transitive,
+            reading: verb.reading,
             meaning: verb.meaning,
             jlpt: verb.jlpt,
             options: ["自動詞", "他動詞"],
@@ -172,7 +218,7 @@ export function buildQuestionDeck(verbs, specialty) {
     return [...firstWave, ...secondWave];
   }
 
-  return verbs
+  const allQuestions = verbs
     .filter((verb) => Boolean(verb[specialty]))
     .map((verb) => {
       const specialtyRule = getSpecialtyRule(specialty);
@@ -185,12 +231,15 @@ export function buildQuestionDeck(verbs, specialty) {
         promptLabel: specialtyRule.label,
         difficulty: specialtyRule.difficulty,
         dictionary_form: verb.dictionary_form,
-        meaning: verb.meaning,
+        reading: verb.reading,
+        meaning: getMeaningForForm(verb.meaning, specialty),
         jlpt: verb.jlpt,
         timeLimit: calculateQuestionTimeLimit(verb, specialty, specialtyRule.difficulty),
         difficultyDescription: describeQuestionDifficulty(verb, specialty, specialtyRule.difficulty),
       };
     });
+  // 同一動詞至少隔 5 題再出現
+  return spreadShuffleBySource(allQuestions, 5);
 }
 
 export function selectJlptLevelsForDifficulty(aiAccuracy) {

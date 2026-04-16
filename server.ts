@@ -34,6 +34,7 @@ const TRANSITIVITY_PAIRS = [
   {
     id: "1",
     dictionary_form: "食べる",
+    reading: "たべる",
     verb_family: "ichidan",
     causative: "食べさせる",
     passive: "食べられる",
@@ -45,6 +46,7 @@ const TRANSITIVITY_PAIRS = [
   {
     id: "2",
     dictionary_form: "飲む",
+    reading: "のむ",
     verb_family: "godan",
     causative: "飲ませる",
     passive: "飲まれる",
@@ -64,6 +66,7 @@ const TRANSITIVITY_PAIRS = [
   {
     id: "3",
     dictionary_form: "行く",
+    reading: "いく",
     verb_family: "godan",
     causative: "行かせる",
     passive: "行かれる",
@@ -83,6 +86,7 @@ const TRANSITIVITY_PAIRS = [
   {
     id: "4",
     dictionary_form: "来る",
+    reading: "くる",
     verb_family: "irregular",
     causative: "来させる",
     passive: "来られる",
@@ -94,6 +98,7 @@ const TRANSITIVITY_PAIRS = [
   {
     id: "5",
     dictionary_form: "書く",
+    reading: "かく",
     verb_family: "godan",
     causative: "書かせる",
     passive: "書かれる",
@@ -113,6 +118,7 @@ const TRANSITIVITY_PAIRS = [
   {
     id: "6",
     dictionary_form: "読む",
+    reading: "よむ",
     verb_family: "godan",
     causative: "読ませる",
     passive: "読まれる",
@@ -132,6 +138,7 @@ const TRANSITIVITY_PAIRS = [
   {
     id: "7",
     dictionary_form: "開く",
+    reading: "ひらく",
     verb_family: "godan",
     causative: "開かせる",
     passive: "開かれる",
@@ -151,6 +158,7 @@ const TRANSITIVITY_PAIRS = [
   {
     id: "8",
     dictionary_form: "閉める",
+    reading: "しめる",
     verb_family: "ichidan",
     causative: "閉めさせる",
     passive: "閉められる",
@@ -162,6 +170,7 @@ const TRANSITIVITY_PAIRS = [
   {
     id: "9",
     dictionary_form: "消す",
+    reading: "けす",
     verb_family: "godan",
     causative: "消させる",
     passive: "消される",
@@ -181,6 +190,7 @@ const TRANSITIVITY_PAIRS = [
   {
     id: "10",
     dictionary_form: "出す",
+    reading: "だす",
     verb_family: "godan",
     causative: "出させる",
     passive: "出される",
@@ -200,6 +210,7 @@ const TRANSITIVITY_PAIRS = [
   {
     id: "11",
     dictionary_form: "待つ",
+    reading: "まつ",
     verb_family: "godan",
     causative: "待たせる",
     passive: "待たれる",
@@ -219,6 +230,7 @@ const TRANSITIVITY_PAIRS = [
   {
     id: "12",
     dictionary_form: "話す",
+    reading: "はなす",
     verb_family: "godan",
     causative: "話させる",
     passive: "話される",
@@ -277,7 +289,7 @@ const MOCK_CHARACTERS = [
     name: "HANA",
     specialty: "causative_passive",
     image: LOCAL_CHARACTER_IMAGES.hana,
-    description: "擅長使役受身形（させられる）。藍髮護目鏡，被迫做事的究極苦主！",
+    description: "擅長使役受身形（させられる）。被迫做事的究極苦主！",
     color: "#2A9D8F",
     hexColor: "#2A9D8F",
     baseStats: BASE_CHARACTER_STATS.hana,
@@ -390,13 +402,13 @@ async function startServer() {
         const upperName = name.toUpperCase();
         if (upperName.includes("HIKARU")) image = LOCAL_CHARACTER_IMAGES.hikaru;
         if (upperName.includes("RAITO")) image = LOCAL_CHARACTER_IMAGES.raito;
-        if (upperName.includes("HANA") || upperName.includes("ASA") || upperName.includes("AYU") || upperName.includes("ASUKA")) image = LOCAL_CHARACTER_IMAGES.hana;
+        if (upperName.includes("HANA") || upperName.includes("KENTA")) image = LOCAL_CHARACTER_IMAGES.hana;
         if (upperName.includes("MINAMI")) image = LOCAL_CHARACTER_IMAGES.minami;
         if (upperName.includes("TAKA")) image = LOCAL_CHARACTER_IMAGES.taka;
         let baseStats: { power: number; speed: number; spirit: number } = BASE_CHARACTER_STATS.hikaru;
         if (upperName.includes("HIKARU")) baseStats = BASE_CHARACTER_STATS.hikaru;
         if (upperName.includes("RAITO")) baseStats = BASE_CHARACTER_STATS.raito;
-        if (upperName.includes("HANA") || upperName.includes("ASA") || upperName.includes("AYU") || upperName.includes("ASUKA")) baseStats = BASE_CHARACTER_STATS.hana;
+        if (upperName.includes("HANA") || upperName.includes("KENTA")) baseStats = BASE_CHARACTER_STATS.hana;
         if (upperName.includes("MINAMI")) baseStats = BASE_CHARACTER_STATS.minami;
         if (upperName.includes("TAKA")) baseStats = BASE_CHARACTER_STATS.taka;
 

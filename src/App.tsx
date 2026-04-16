@@ -10,11 +10,12 @@ import { getBattlePresentation } from "./lib/battle-presentation.js";
 import { calculateCharacterStats, getStoredProgress, recordBattleProgress, saveStoredProgress } from "./lib/progression.js";
 import { getOrderedCharacters, shouldRunBattleTimer } from "./lib/ui-flow.js";
 import { createLesson } from "./lib/lessons.js";
+import { renderWithFuriganaJSX } from "./lib/furigana.js";
 
 // --- Components ---
 
 const StartScreen = ({ onStart }: { onStart: () => void }) => (
-  <div className="relative h-screen w-full flex flex-col items-center justify-center overflow-hidden bg-[#03040e]">
+  <div className="relative min-h-screen w-full flex flex-col items-center justify-center overflow-x-hidden overflow-y-auto bg-[#03040e] px-4 py-10 sm:px-6">
     {/* Background radial glows */}
     <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_20%,rgba(0,245,255,0.18),transparent_55%),radial-gradient(ellipse_at_50%_80%,rgba(255,0,153,0.18),transparent_55%)]"></div>
     {/* CRT scanline overlay */}
@@ -36,10 +37,10 @@ const StartScreen = ({ onStart }: { onStart: () => void }) => (
       initial={{ scale: 0.85, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
       transition={{ duration: 0.6, ease: "easeOut" }}
-      className="relative z-10 flex flex-col items-center gap-5 px-4 w-full max-w-3xl"
+      className="relative z-10 flex w-full max-w-3xl flex-col items-center gap-5 px-2 sm:px-4"
     >
       {/* Sub-label above title */}
-      <div className="arcade-chip text-[9px] sm:text-[10px] tracking-[0.4em]">
+      <div className="arcade-chip max-w-full text-center text-[9px] sm:text-[10px] tracking-[0.32em] sm:tracking-[0.4em]">
         ★ JAPANESE VERB COMBAT ★
       </div>
 
@@ -138,7 +139,9 @@ const CharacterSelect = ({
     fetch("/api/characters", { cache: "no-store" })
       .then((res) => res.json())
       .then((data) => {
-        setCharacters(getOrderedCharacters(data));
+        const ordered = getOrderedCharacters(data);
+        setCharacters(ordered);
+        setHoveredChar(ordered[0] ?? null);
         setLoading(false);
       });
   }, []);
@@ -150,11 +153,11 @@ const CharacterSelect = ({
   );
 
   return (
-    <div className="h-screen w-full flex flex-col overflow-hidden relative bg-[#03040e]">
+    <div className="min-h-screen w-full flex flex-col overflow-x-hidden overflow-y-auto lg:h-screen lg:overflow-hidden relative bg-[#03040e]">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_0%,rgba(0,245,255,0.15),transparent_50%),radial-gradient(ellipse_at_50%_100%,rgba(255,0,153,0.15),transparent_50%)]"></div>
       <div className="arcade-overlay"></div>
       {/* Header */}
-      <div className="p-4 md:p-6 border-b flex justify-between items-end gap-4 relative z-10"
+      <div className="p-4 md:p-6 border-b flex flex-col justify-between gap-4 md:flex-row md:items-end relative z-10"
            style={{ borderColor: "rgba(0,245,255,0.2)" }}>
         <div>
           <motion.button
@@ -180,7 +183,7 @@ const CharacterSelect = ({
 
       <div className="flex-1 flex flex-col lg:flex-row min-h-0">
         {/* Character Grid */}
-        <div className="w-full lg:w-1/2 p-5 md:p-8 lg:p-12 flex flex-col gap-4 overflow-y-auto min-h-0">
+        <div className="w-full lg:w-1/2 p-4 md:p-8 lg:p-10 flex flex-col gap-4 overflow-y-auto min-h-0">
           {characters.map((char) => {
             const stats = calculateCharacterStats(char.baseStats, progress[char.id]);
 
@@ -191,6 +194,7 @@ const CharacterSelect = ({
               whileHover={{ x: 6 }}
               whileTap={{ scale: 0.97 }}
               onMouseEnter={() => setHoveredChar(char)}
+              onFocus={() => setHoveredChar(char)}
               onClick={() => onSelect(char)}
               className={cn(
                 "arcade-portrait-frame relative w-full overflow-hidden group flex items-center transition-all duration-200",
@@ -250,7 +254,7 @@ const CharacterSelect = ({
         </div>
 
         {/* Preview Panel */}
-        <div className="w-full lg:w-1/2 relative overflow-hidden border-t lg:border-t-0 lg:border-l min-h-[34vh] lg:min-h-0"
+        <div className="w-full lg:w-1/2 relative overflow-hidden border-t lg:border-t-0 lg:border-l min-h-[24rem] md:min-h-[30rem] lg:min-h-0"
              style={{ borderColor: "rgba(0,245,255,0.15)" }}>
           <AnimatePresence mode="wait">
             {hoveredChar && (() => {
@@ -277,7 +281,7 @@ const CharacterSelect = ({
                 
                 <div className="relative z-10 p-5 md:p-8 lg:p-12 flex flex-col h-full justify-between gap-6">
                   <div>
-                    <div className="arcade-nameplate inline-flex max-w-[70%] flex-col gap-2 rounded-sm px-4 py-3 md:px-5 md:py-4">
+                    <div className="arcade-nameplate inline-flex max-w-[80%] md:max-w-[70%] flex-col gap-2 rounded-sm px-4 py-3 md:px-5 md:py-4">
                       <h3 className="arcade-title text-3xl md:text-5xl lg:text-6xl text-white">
                         {hoveredChar.name}
                       </h3>
@@ -288,7 +292,7 @@ const CharacterSelect = ({
                   </div>
 
                   <div className="space-y-4 max-w-sm">
-                    <div className="grid grid-cols-2 gap-8">
+                    <div className="grid grid-cols-2 gap-5 md:gap-8">
                       <div>
                         <p className="text-[10px] text-gray-500 uppercase mb-1">力量</p>
                         <div className="h-2 bg-white/10 w-full"><div className="h-full bg-white" style={{ width: `${stats.power}%` }}></div></div>
@@ -520,7 +524,7 @@ const BattleStage = ({ character, onFinish, onBack }: { character: Character; on
     }
 
     const focusTimer = window.setTimeout(() => {
-      inputRef.current?.focus();
+      inputRef.current?.focus({ preventScroll: true });
       inputRef.current?.select();
     }, 40);
 
@@ -597,7 +601,7 @@ const BattleStage = ({ character, onFinish, onBack }: { character: Character; on
       attacker: resolution.attacker,
       target: resolution.target,
       label: resolution.label,
-      description: `${resolution.description} AI 作答：${aiAttempt.submittedAnswer}`,
+      description: resolution.description,
       expected: currentQuestion.answer,
       submitted: playerAttempt.submittedAnswer || "未作答",
       promptLabel: currentQuestion.promptLabel,
@@ -677,7 +681,7 @@ const BattleStage = ({ character, onFinish, onBack }: { character: Character; on
   );
 
   return (
-    <div className={cn("h-screen w-full flex flex-col relative overflow-hidden", battlePresentation.backdropClassName)}>
+    <div className={cn("min-h-screen w-full flex flex-col relative overflow-x-hidden overflow-y-auto xl:h-screen", battlePresentation.backdropClassName)}>
       <AnimatePresence>
         {isPaused && (
           <motion.div
@@ -708,7 +712,7 @@ const BattleStage = ({ character, onFinish, onBack }: { character: Character; on
       <div className={cn("pointer-events-none absolute inset-0", battlePresentation.arenaGlowClassName)}></div>
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.02),transparent_18%,transparent_82%,rgba(0,0,0,0.28))]"></div>
 
-      <div className="absolute right-4 top-4 z-20 md:right-6 md:top-6">
+      <div className="absolute right-4 top-4 z-30 md:right-6 md:top-6">
         <button
           type="button"
           onClick={() => setIsPaused((prev) => !prev)}
@@ -722,7 +726,7 @@ const BattleStage = ({ character, onFinish, onBack }: { character: Character; on
         </button>
       </div>
 
-      <div className="p-4 pt-20 md:p-6 md:pt-24 flex flex-col lg:flex-row justify-between items-stretch lg:items-start z-10 gap-4 md:gap-6">
+      <div className="p-4 pt-20 md:p-6 md:pt-24 flex flex-col lg:flex-row justify-between items-stretch lg:items-start z-20 gap-4 md:gap-6">
         <div className="arcade-frame w-full lg:w-1/3 flex items-start gap-4 p-3 md:p-4">
           <div className="w-16 h-16 border-2 border-cyan-400 overflow-hidden bg-black flex-shrink-0">
             <img src={character.image} alt={character.name} className="w-full h-full object-cover [image-rendering:pixelated]" referrerPolicy="no-referrer" />
@@ -788,18 +792,6 @@ const BattleStage = ({ character, onFinish, onBack }: { character: Character; on
           <div className="mt-2 text-[10px] font-mono uppercase tracking-[0.28em] text-gray-500">
             AI 準度 {Math.round(aiConfig.accuracy.current * 100)}% / 反應 {aiConfig.answerDelay.current}ms
           </div>
-          {onBack && (
-            <button
-              type="button"
-              onClick={onBack}
-              className="arcade-button mt-2 px-4 py-2 text-xs uppercase tracking-[0.28em] opacity-70 hover:opacity-100"
-            >
-              <span className="flex items-center gap-2">
-                <ChevronLeft className="w-4 h-4" />
-                離開對戰
-              </span>
-            </button>
-          )}
         </motion.div>
 
         <div className="arcade-frame w-full lg:w-1/3 flex items-start gap-4 text-right p-3 md:p-4">
@@ -828,9 +820,9 @@ const BattleStage = ({ character, onFinish, onBack }: { character: Character; on
         </div>
       </div>
 
-      <div className="flex-1 flex items-center justify-center relative min-h-0">
+      <div className="flex-1 flex items-start xl:items-center justify-center relative min-h-0 pb-6">
         <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-cyan-500/20 via-transparent to-transparent"></div>
-        <div className="relative z-10 grid grid-cols-1 xl:grid-cols-[minmax(0,24rem)_minmax(0,42rem)_minmax(0,24rem)] items-center gap-4 md:gap-6 xl:gap-8 w-full px-4 md:px-6 xl:px-8 py-4">
+        <div className="relative z-10 grid w-full grid-cols-1 gap-4 px-4 py-2 md:gap-6 md:px-6 lg:grid-cols-2 xl:grid-cols-[minmax(0,16rem)_minmax(0,1fr)_minmax(0,16rem)] 2xl:grid-cols-[minmax(0,20rem)_minmax(0,1fr)_minmax(0,20rem)] xl:gap-6 xl:px-6 2xl:gap-8 2xl:px-8">
           <motion.div
             animate={
               reducedMotion ? { opacity: 1 } :
@@ -839,14 +831,14 @@ const BattleStage = ({ character, onFinish, onBack }: { character: Character; on
               { x: 0, scale: 1, rotate: 0 }
             }
             transition={{ duration: useLightweightChoiceFeedback ? 0.24 : 0.55, ease: [0.22, 1, 0.36, 1] }}
-            className="relative justify-self-center xl:justify-self-end order-2 xl:order-1"
+            className="relative justify-self-center lg:justify-self-end order-2 lg:order-2 xl:order-1"
           >
             <div className={cn("absolute inset-0 bg-cyan-400/15", useLightweightChoiceFeedback ? "blur-xl opacity-70" : "blur-3xl")}></div>
             <img
               src={character.image}
               alt={character.name}
               className={cn(
-                "relative h-[14rem] sm:h-[18rem] lg:h-[22rem] xl:h-[28rem] max-w-full w-auto object-contain [image-rendering:pixelated] drop-shadow-[0_18px_40px_rgba(34,211,238,0.28)]",
+                "relative h-[12rem] sm:h-[16rem] lg:h-[20rem] xl:h-[24rem] max-w-full w-auto object-contain [image-rendering:pixelated] drop-shadow-[0_18px_40px_rgba(34,211,238,0.28)]",
                 turnFeedback?.target === "player" && "brightness-125 saturate-150",
               )}
               referrerPolicy="no-referrer"
@@ -865,49 +857,7 @@ const BattleStage = ({ character, onFinish, onBack }: { character: Character; on
             </AnimatePresence>
           </motion.div>
 
-          <div className="relative z-10 flex max-h-full flex-col items-center max-w-2xl w-full justify-self-center order-1 xl:order-2 overflow-y-auto pr-1">
-            <div className={cn("relative w-full", turnFeedback ? "mb-5 min-h-[176px]" : "mb-2 min-h-0")}>
-              <AnimatePresence initial={false}>
-                {turnFeedback && (
-                  <motion.div
-                    initial={{ y: useLightweightChoiceFeedback ? -8 : -16, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    exit={{ y: useLightweightChoiceFeedback ? -6 : -12, opacity: 0 }}
-                    transition={{ duration: useLightweightChoiceFeedback ? 0.2 : 0.28, ease: [0.22, 1, 0.36, 1] }}
-                    className={cn(
-                      "arcade-frame absolute inset-0 grid w-full grid-cols-1 sm:grid-cols-[1fr_auto] gap-4 px-4 md:px-5 py-4 will-change-transform",
-                      turnFeedback.outcome === "success"
-                        ? "border-cyan-400/45 bg-[linear-gradient(180deg,rgba(9,18,28,0.94),rgba(6,12,22,0.9))]"
-                        : "border-red-400/45 bg-[linear-gradient(180deg,rgba(26,12,18,0.94),rgba(16,8,12,0.9))]"
-                    )}
-                  >
-                    <div>
-                      <div className="text-xs font-mono uppercase tracking-[0.35em] text-gray-400 mb-1">
-                        {turnFeedback.attacker === "player" ? "玩家先手" : "對手反擊"}
-                      </div>
-                      <div className="text-xl md:text-2xl font-black italic text-white">{turnFeedback.label}</div>
-                      <div className="mt-1 text-sm text-gray-300">{turnFeedback.description}</div>
-                      <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-                        <div className="border border-white/10 bg-black/30 px-3 py-2">
-                          <div className="text-[10px] font-mono uppercase tracking-[0.3em] text-gray-500">你的答案</div>
-                          <div className="mt-1 font-black text-white">{turnFeedback.submitted}</div>
-                        </div>
-                        <div className="border border-white/10 bg-black/30 px-3 py-2">
-                          <div className="text-[10px] font-mono uppercase tracking-[0.3em] text-gray-500">正確答案</div>
-                          <div className="mt-1 font-black text-cyan-300">{turnFeedback.expected}</div>
-                        </div>
-                      </div>
-                    </div>
-                    {turnFeedback.outcome === "success" ? (
-                      <Sparkles className="h-6 w-6 flex-shrink-0 text-cyan-300" />
-                    ) : (
-                      <AlertTriangle className="h-6 w-6 flex-shrink-0 text-red-300" />
-                    )}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-
+          <div className="relative z-10 isolate flex max-h-full flex-col items-center w-full max-w-3xl xl:max-w-2xl justify-self-center order-1 lg:order-1 lg:col-span-2 xl:order-2 xl:col-span-1 overflow-visible">
             <motion.div
               key={`${currentQuestion.id}-${questionNonce}`}
               initial={reducedMotion ? false : { scale: 0.94, opacity: 0, y: 16 }}
@@ -915,10 +865,52 @@ const BattleStage = ({ character, onFinish, onBack }: { character: Character; on
               exit={reducedMotion ? { opacity: 0 } : { scale: 1.04, opacity: 0, y: -12 }}
               transition={{ duration: 0.35 }}
               className={cn(
-                "arcade-frame w-full text-center",
-                isChoiceQuestion ? "mb-5 p-4 sm:p-6 lg:p-8" : "mb-8 p-5 sm:p-8 lg:p-12"
+                "arcade-frame relative z-10 w-full text-center",
+                isChoiceQuestion ? "mb-4 p-4 sm:p-6 lg:p-7" : "mb-6 p-5 sm:p-8 lg:p-10"
               )}
             >
+              {/* 答題回饋覆蓋層 — 疊在題目框上，版面完全不位移 */}
+              <AnimatePresence initial={false}>
+                {turnFeedback && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: useLightweightChoiceFeedback ? 0.18 : 0.25, ease: [0.22, 1, 0.36, 1] }}
+                    className={cn(
+                      "absolute inset-0 z-20 flex flex-col justify-center gap-3 px-4 md:px-5 py-4 will-change-transform",
+                      turnFeedback.outcome === "success"
+                        ? "bg-[linear-gradient(180deg,rgba(9,18,28,0.97),rgba(6,12,22,0.96))] border border-cyan-400/45"
+                        : "bg-[linear-gradient(180deg,rgba(26,12,18,0.97),rgba(16,8,12,0.96))] border border-red-400/45"
+                    )}
+                  >
+                    <div className="flex items-start gap-4">
+                      <div className="flex-1 text-left">
+                        <div className="text-xs font-mono uppercase tracking-[0.35em] text-gray-400 mb-1">
+                          {turnFeedback.attacker === "player" ? "玩家先手" : "對手反擊"}
+                        </div>
+                        <div className="text-xl md:text-2xl font-black italic text-white">{turnFeedback.label}</div>
+                        <div className="mt-1 text-sm text-gray-300">{turnFeedback.description}</div>
+                      </div>
+                      {turnFeedback.outcome === "success" ? (
+                        <Sparkles className="h-6 w-6 flex-shrink-0 text-cyan-300 mt-1" />
+                      ) : (
+                        <AlertTriangle className="h-6 w-6 flex-shrink-0 text-red-300 mt-1" />
+                      )}
+                    </div>
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                      <div className="border border-white/10 bg-black/30 px-3 py-2 text-left">
+                        <div className="text-[10px] font-mono uppercase tracking-[0.3em] text-gray-500">你的答案</div>
+                        <div className="mt-1 font-black text-white">{turnFeedback.submitted}</div>
+                      </div>
+                      <div className="border border-white/10 bg-black/30 px-3 py-2 text-left">
+                        <div className="text-[10px] font-mono uppercase tracking-[0.3em] text-gray-500">正確答案</div>
+                        <div className="mt-1 font-black text-cyan-300">{turnFeedback.expected}</div>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
               {isChoiceQuestion ? (
                 <div className="space-y-5 text-left">
                   <div>
@@ -932,17 +924,40 @@ const BattleStage = ({ character, onFinish, onBack }: { character: Character; on
                   </div>
                   <div>
                     <div className="text-[11px] font-mono uppercase tracking-[0.32em] text-cyan-400">當前題目</div>
-                    <h4 className="mt-3 font-black text-white break-all text-5xl sm:text-7xl lg:text-8xl text-center">
-                      {currentQuestion.dictionary_form}
+                    <h4 className="mt-3 font-black text-white break-all text-4xl sm:text-5xl lg:text-6xl xl:text-7xl text-center">
+                      {currentQuestion.sourceVerbId && currentQuestion.sourceVerbId.toString().startsWith('bank-') ?
+                        renderWithFuriganaJSX(currentQuestion.dictionary_form, currentQuestion.reading || "") :
+                        currentQuestion.dictionary_form
+                      }
                     </h4>
-                    <p className="mt-3 text-center text-lg sm:text-2xl text-gray-400 italic">{currentQuestion.meaning}</p>
+                    <p className="mt-3 text-center text-base sm:text-xl lg:text-2xl text-gray-400 italic">{currentQuestion.meaning}</p>
                   </div>
-                  <div className="flex items-center justify-between gap-4 text-[11px] font-mono uppercase tracking-[0.28em] text-gray-500">
+                  <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4 text-[11px] font-mono uppercase tracking-[0.28em] text-gray-500">
                     <div className="flex items-center gap-2">
                       <Swords className="w-4 h-4" />
                       <span>自他動詞辨識 / {currentQuestion.difficulty}</span>
                     </div>
                     <span>{timeRule}</span>
+                  </div>
+                  {/* 選擇按鈕：縮小後放入題目框 */}
+                  <div className="grid grid-cols-2 gap-2 sm:gap-3 pt-1">
+                    {currentQuestion.options?.map((option) => (
+                      <button
+                        key={option}
+                        type="button"
+                        onClick={() => handleChoiceSelection(option)}
+                        disabled={phase !== "ready" || isPaused}
+                        className={cn(
+                          "arcade-button w-full min-h-[52px] border-2 px-3 py-2 text-center text-lg sm:text-xl font-black tracking-[0.06em] text-white transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-45 focus:outline-none focus:ring-2 focus:ring-cyan-300/70",
+                          inputState === "success" ? "border-cyan-300 bg-cyan-400/10 shadow-[0_0_28px_rgba(34,211,238,0.22)]" :
+                          inputState === "failure" ? "border-red-500 bg-red-500/10 shadow-[0_0_28px_rgba(239,68,68,0.16)]" :
+                          inputState === "timeout" ? "border-orange-400 bg-orange-400/10 shadow-[0_0_28px_rgba(251,146,60,0.16)]" :
+                          "border-white/18 bg-white/[0.04] hover:-translate-y-1 hover:scale-[1.01] hover:border-cyan-300/80 hover:bg-cyan-400/10 active:scale-[0.98]"
+                        )}
+                      >
+                        {option}
+                      </button>
+                    ))}
                   </div>
                 </div>
               ) : (
@@ -953,11 +968,14 @@ const BattleStage = ({ character, onFinish, onBack }: { character: Character; on
                   </div>
                   <h4 className={cn(
                     "font-black text-white break-all",
-                    isChoiceQuestion ? "mb-3 text-4xl sm:text-6xl lg:text-7xl" : "mb-4 text-5xl sm:text-7xl lg:text-8xl"
+                    isChoiceQuestion ? "mb-3 text-4xl sm:text-5xl lg:text-6xl xl:text-7xl" : "mb-4 text-4xl sm:text-5xl lg:text-6xl xl:text-8xl"
                   )}>
-                    {currentQuestion.dictionary_form}
+                    {currentQuestion.sourceVerbId && currentQuestion.sourceVerbId.toString().startsWith('bank-') ?
+                      renderWithFuriganaJSX(currentQuestion.dictionary_form, currentQuestion.reading || "") :
+                      currentQuestion.dictionary_form
+                    }
                   </h4>
-                  <p className={cn("text-gray-400 italic", isChoiceQuestion ? "text-base sm:text-xl" : "text-lg sm:text-2xl")}>
+                  <p className={cn("text-gray-400 italic", isChoiceQuestion ? "text-base sm:text-xl" : "text-base sm:text-xl lg:text-2xl")}>
                     {currentQuestion.meaning}
                   </p>
                   <div className={cn(
@@ -973,42 +991,21 @@ const BattleStage = ({ character, onFinish, onBack }: { character: Character; on
               )}
             </motion.div>
 
-            <div className="w-full relative">
-              <div className="flex items-center justify-between gap-4 text-xs font-mono text-gray-500 uppercase tracking-widest mb-2">
-                <span>{currentQuestion.questionType === "choice" ? "判斷作答" : "輸入作答"}</span>
-                <span className={cn(
-                  "transition-colors",
-                  timerCritical ? "text-red-400" : timerDanger ? "text-orange-300" : "text-gray-500"
-                )}>
-                  {timerDanger ? "快作答，對手要壓上來了" : currentQuestion.questionType === "choice" ? "先判斷，再重擊對手" : "答對就能先手壓制對手"}
-                </span>
-              </div>
-
-              {currentQuestion.questionType === "choice" ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pb-2">
-                    {currentQuestion.options?.map((option) => (
-                      <button
-                        key={option}
-                        type="button"
-                        onClick={() => handleChoiceSelection(option)}
-                        disabled={phase !== "ready" || isPaused}
-                        className={cn(
-                          "arcade-button min-h-[120px] border-2 px-5 py-5 text-center text-3xl sm:text-4xl font-black tracking-[0.08em] text-white transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-45 focus:outline-none focus:ring-2 focus:ring-cyan-300/70",
-                          inputState === "success" ? "border-cyan-300 bg-cyan-400/10 shadow-[0_0_35px_rgba(34,211,238,0.22)]" :
-                          inputState === "failure" ? "border-red-500 bg-red-500/10 shadow-[0_0_35px_rgba(239,68,68,0.16)]" :
-                          inputState === "timeout" ? "border-orange-400 bg-orange-400/10 shadow-[0_0_35px_rgba(251,146,60,0.16)]" :
-                          "border-white/18 bg-white/[0.04] hover:-translate-y-1 hover:scale-[1.01] hover:border-cyan-300/80 hover:bg-cyan-400/10 active:scale-[0.98]"
-                        )}
-                      >
-                        {option}
-                      </button>
-                    ))}
-                </div>
-              ) : (
-                <form onSubmit={handleSubmit}>
+            <div className="relative z-20 w-full">
+              {currentQuestion.questionType !== "choice" && (
+                <>
+                  <div className="mb-3 flex flex-col gap-2 text-xs font-mono text-gray-500 uppercase tracking-widest sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+                    <span>輸入作答</span>
+                    <span className={cn(
+                      "transition-colors",
+                      timerCritical ? "text-red-400" : timerDanger ? "text-orange-300" : "text-gray-500"
+                    )}>
+                      {timerDanger ? "快作答，對手要壓上來了" : "答對就能先手壓制對手"}
+                    </span>
+                  </div>
+                  <form onSubmit={handleSubmit}>
                   <input
                     ref={inputRef}
-                    autoFocus
                     type="text"
                     value={userInput}
                     onChange={(e) => setUserInput(e.target.value)}
@@ -1023,6 +1020,7 @@ const BattleStage = ({ character, onFinish, onBack }: { character: Character; on
                     placeholder="輸入變化..."
                   />
                 </form>
+                </>
               )}
             </div>
           </div>
@@ -1035,14 +1033,14 @@ const BattleStage = ({ character, onFinish, onBack }: { character: Character; on
               { x: 0, scale: 1, rotate: 0 }
             }
             transition={{ duration: useLightweightChoiceFeedback ? 0.24 : 0.55, ease: [0.22, 1, 0.36, 1] }}
-            className="relative justify-self-center xl:justify-self-start order-3"
+            className="relative justify-self-center lg:justify-self-start order-3 lg:order-3 xl:order-3"
           >
             <div className={cn("absolute inset-0 bg-red-500/15", useLightweightChoiceFeedback ? "blur-xl opacity-70" : "blur-3xl")}></div>
             <img
               src={enemyProfile.image}
               alt={enemyProfile.name}
               className={cn(
-                "relative h-[14rem] sm:h-[18rem] lg:h-[22rem] xl:h-[28rem] max-w-full w-auto object-contain [image-rendering:pixelated] drop-shadow-[0_18px_40px_rgba(239,68,68,0.22)]",
+                "relative h-[12rem] sm:h-[16rem] lg:h-[20rem] xl:h-[24rem] max-w-full w-auto object-contain [image-rendering:pixelated] drop-shadow-[0_18px_40px_rgba(239,68,68,0.22)]",
                 turnFeedback?.target === "enemy" && "brightness-110 saturate-125"
               )}
               referrerPolicy="no-referrer"
@@ -1056,17 +1054,6 @@ const BattleStage = ({ character, onFinish, onBack }: { character: Character; on
                   className="absolute left-1/2 top-4 -translate-x-1/2 rounded-full border border-red-300/30 bg-black/60 px-4 py-2 text-xs font-mono uppercase tracking-[0.3em] text-red-100"
                 >
                   AI Thinking...
-                </motion.div>
-              )}
-              {aiRoundState?.status === "answered" && (
-                <motion.div
-                  initial={{ opacity: 0, y: 18 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0 }}
-                  className="absolute left-1/2 top-4 min-w-[11rem] -translate-x-1/2 border border-white/12 bg-black/65 px-4 py-3 text-center"
-                >
-                  <div className="text-[10px] font-mono uppercase tracking-[0.3em] text-gray-500">AI Answer</div>
-                  <div className="mt-1 font-black text-white">{aiRoundState.submittedAnswer}</div>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -1113,7 +1100,12 @@ const ReviewSection = ({
       {items.map((item) => (
         <article key={item.question.id} className="border border-white/10 bg-black/30 p-4 md:p-5">
           <div className="flex flex-wrap items-center gap-2 text-[10px] font-mono uppercase tracking-[0.28em] text-gray-500">
-            <span>{item.question.dictionary_form}</span>
+            <span className="font-black text-white">
+              {item.question.sourceVerbId && item.question.sourceVerbId.toString().startsWith('bank-') ?
+                renderWithFuriganaJSX(item.question.dictionary_form, item.question.reading || "") :
+                item.question.dictionary_form
+              }
+            </span>
             <span>/</span>
             <span>{item.question.promptLabel}</span>
             <span>/</span>
@@ -1175,7 +1167,7 @@ const ResultScreen = ({
   const timeoutItems = result.reviews.filter((item) => item.answerState === "timeout");
 
   return (
-    <div className="h-screen w-full overflow-y-auto bg-[radial-gradient(circle_at_top,rgba(110,242,255,0.14),transparent_24%),radial-gradient(circle_at_bottom,rgba(255,79,216,0.14),transparent_22%),linear-gradient(180deg,rgba(4,6,16,0.98),rgba(4,4,10,1))] relative">
+    <div className="min-h-screen w-full overflow-y-auto bg-[radial-gradient(circle_at_top,rgba(110,242,255,0.14),transparent_24%),radial-gradient(circle_at_bottom,rgba(255,79,216,0.14),transparent_22%),linear-gradient(180deg,rgba(4,6,16,0.98),rgba(4,4,10,1))] relative">
       <div className="arcade-overlay"></div>
       <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-6 md:px-6 md:py-8">
         <section className="arcade-frame p-6 md:p-8">
@@ -1200,7 +1192,7 @@ const ResultScreen = ({
               <div className="mt-1 text-sm text-gray-400">{getSpecialtyLabel(result.specialty)}</div>
             </div>
           </div>
-          <div className="mt-6 grid grid-cols-2 gap-4 md:grid-cols-6">
+          <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
             <div className="arcade-frame p-4 text-center"><div className="text-[10px] font-mono uppercase tracking-[0.28em] text-gray-500">總分</div><div className="mt-2 text-3xl font-black text-cyan-300">{result.score}</div></div>
             <div className="arcade-frame p-4 text-center"><div className="text-[10px] font-mono uppercase tracking-[0.28em] text-gray-500">結果</div><div className="mt-2 text-2xl font-black text-white">{result.won ? "WIN" : "LOSE"}</div></div>
             <div className="arcade-frame p-4 text-center"><div className="text-[10px] font-mono uppercase tracking-[0.28em] text-gray-500">答對</div><div className="mt-2 text-3xl font-black text-emerald-300">{result.correctCount}</div></div>
@@ -1237,14 +1229,14 @@ const ResultScreen = ({
           />
         )}
 
-        <section className="arcade-frame flex flex-wrap items-center justify-center gap-4 p-5 md:p-6">
-          <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} onClick={onRestart} className="arcade-button px-8 py-3 font-black uppercase italic">
+        <section className="arcade-frame flex flex-col items-stretch justify-center gap-3 p-5 md:flex-row md:flex-wrap md:items-center md:gap-4 md:p-6">
+          <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} onClick={onRestart} className="arcade-button w-full px-8 py-3 font-black uppercase italic md:w-auto">
             再玩一次
           </motion.button>
-          <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} onClick={onSelect} className="arcade-button px-8 py-3 font-black uppercase italic">
+          <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} onClick={onSelect} className="arcade-button w-full px-8 py-3 font-black uppercase italic md:w-auto">
             回到角色選擇
           </motion.button>
-          <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} onClick={onHome} className="arcade-button px-8 py-3 font-black uppercase italic">
+          <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} onClick={onHome} className="arcade-button w-full px-8 py-3 font-black uppercase italic md:w-auto">
             回到主畫面
           </motion.button>
         </section>
