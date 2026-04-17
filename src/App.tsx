@@ -11,6 +11,7 @@ import { calculateCharacterStats, getStoredProgress, recordBattleProgress, saveS
 import { getOrderedCharacters, shouldRunBattleTimer } from "./lib/ui-flow.js";
 import { createLesson } from "./lib/lessons.js";
 import { renderWithFuriganaJSX } from "./lib/furigana.jsx";
+import { getCharacters, getVerbs } from "./lib/static-data.js";
 
 // --- Components ---
 
@@ -136,14 +137,11 @@ const CharacterSelect = ({
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/characters", { cache: "no-store" })
-      .then((res) => res.json())
-      .then((data) => {
-        const ordered = getOrderedCharacters(data);
-        setCharacters(ordered);
-        setHoveredChar(ordered[0] ?? null);
-        setLoading(false);
-      });
+    const data = getCharacters();
+    const ordered = getOrderedCharacters(data);
+    setCharacters(ordered);
+    setHoveredChar(ordered[0] ?? null);
+    setLoading(false);
   }, []);
 
   if (loading) return (
@@ -389,13 +387,10 @@ const BattleStage = ({ character, onFinish, onBack }: { character: Character; on
   const enemyProfile = battlePresentation.enemy;
 
   useEffect(() => {
-    fetch("/api/verbs")
-      .then((res) => res.json())
-      .then((data: Verb[]) => {
-        const deck = buildQuestionDeck(data, character.specialty);
-        setQuestions(deck);
-        setLoading(false);
-      });
+    const data = getVerbs() as Verb[];
+    const deck = buildQuestionDeck(data, character.specialty);
+    setQuestions(deck);
+    setLoading(false);
   }, [character.specialty]);
 
   useEffect(() => {
