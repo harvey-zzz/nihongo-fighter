@@ -707,7 +707,8 @@ const BattleStage = ({ character, onFinish, onBack }: { character: Character; on
       <div className={cn("pointer-events-none absolute inset-0", battlePresentation.arenaGlowClassName)}></div>
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.02),transparent_18%,transparent_82%,rgba(0,0,0,0.28))]"></div>
 
-      <div className="absolute right-4 top-4 z-30 md:right-6 md:top-6">
+      {/* Desktop-only pause button (hidden on mobile, replaced by inline button in timer row) */}
+      <div className="hidden md:block absolute right-6 top-6 z-30">
         <button
           type="button"
           onClick={() => setIsPaused((prev) => !prev)}
@@ -721,58 +722,77 @@ const BattleStage = ({ character, onFinish, onBack }: { character: Character; on
         </button>
       </div>
 
-      {/* ══ Mobile HP strip (hidden on md+) ══ */}
-      <div className="md:hidden flex-shrink-0 px-3 pt-12 pb-1 z-20 flex flex-col gap-0.5">
-        {/* Player row */}
-        <div className="flex items-center gap-2">
-          <img
-            src={character.image} alt={character.name}
-            className="w-8 h-8 flex-shrink-0 border border-cyan-400/70 object-cover [image-rendering:pixelated]"
-            referrerPolicy="no-referrer"
-          />
-          <span className="text-white font-black text-[11px] uppercase truncate flex-shrink-0 w-[4.5rem]">{character.name}</span>
-          <div className="flex-1 arcade-stat-bar h-2 overflow-hidden">
+      {/* ══ Mobile HP section (hidden on md+) ══ */}
+      {/* Row 1: Three boxes — Player | Timer | Enemy */}
+      <div className="md:hidden flex-shrink-0 px-2 pt-2 pb-0 z-20 flex gap-1.5">
+        {/* Player box */}
+        <div className="arcade-frame flex-1 min-w-0 p-2">
+          <div className="text-[9px] font-mono text-gray-500 uppercase tracking-wider mb-0.5">玩家</div>
+          <div className="font-black text-white text-[11px] uppercase truncate">{character.name}</div>
+          <div className="arcade-stat-bar mt-1.5 h-1.5 overflow-hidden">
             <motion.div
               animate={{ width: `${playerHp}%` }}
               transition={{ type: "spring", stiffness: 140, damping: 18 }}
               className="h-full arcade-hp-player"
             />
           </div>
-          <span className="font-mono text-[10px] text-cyan-400 w-8 text-right flex-shrink-0">{playerHp}%</span>
+          <div className="text-[10px] font-mono text-cyan-300 mt-0.5">{playerHp}%</div>
         </div>
-        {/* Timer compact row */}
-        <div className="flex items-center justify-center gap-3 py-0.5">
-          <span className="text-[10px] font-mono text-gray-500 uppercase tracking-widest">Rd.{round}</span>
-          <motion.span
-            animate={timerDanger && !reducedMotion ? { scale: [1, 1.12, 1] } : { scale: 1 }}
+
+        {/* Timer center box */}
+        <div className={cn(
+          "arcade-frame flex-shrink-0 w-[4.5rem] p-2 text-center",
+          timerCritical ? "border-red-500" : timerDanger ? "border-orange-400" : ""
+        )}>
+          <div className="text-[9px] font-mono text-gray-400 uppercase">本題倒數</div>
+          <motion.div
+            animate={timerDanger && !reducedMotion ? { scale: [1, 1.1, 1] } : { scale: 1 }}
             transition={timerDanger ? { repeat: Infinity, duration: timerCritical ? 0.55 : 0.9 } : { duration: 0.2 }}
             className={cn(
-              "font-black text-sm leading-none flex items-center gap-1",
+              "text-2xl font-black leading-tight mt-0.5",
               timerCritical ? "text-red-400" : timerDanger ? "text-orange-300" : "text-white"
             )}
           >
-            <Clock3 className="w-3 h-3" />{timeLeft}s
-          </motion.span>
-          <span className="text-[10px] font-mono text-emerald-300">✓{correctCount}</span>
-          <span className="text-[10px] font-mono text-red-300">✗{wrongCount}</span>
+            {timeLeft}s
+          </motion.div>
+          <div className="text-[9px] font-mono text-gray-500 mt-0.5">Rd.{round}</div>
         </div>
-        {/* Enemy row */}
-        <div className="flex items-center gap-2">
-          <span className="font-mono text-[10px] text-red-400 w-8 flex-shrink-0">{enemyHp}%</span>
-          <div className="flex-1 arcade-stat-bar h-2 overflow-hidden">
+
+        {/* Enemy box */}
+        <div className="arcade-frame flex-1 min-w-0 p-2 text-right">
+          <div className="text-[9px] font-mono text-gray-500 uppercase tracking-wider mb-0.5">AI 對手</div>
+          <div className="font-black text-white text-[11px] uppercase truncate">{enemyProfile.name}</div>
+          <div className="arcade-stat-bar mt-1.5 h-1.5 overflow-hidden">
             <motion.div
               animate={{ width: `${enemyHp}%` }}
               transition={{ type: "spring", stiffness: 140, damping: 18 }}
               className="h-full arcade-hp-enemy"
             />
           </div>
-          <span className="text-white font-black text-[11px] uppercase truncate flex-shrink-0 w-[4.5rem] text-right">{enemyProfile.name}</span>
-          <img
-            src={enemyProfile.image} alt={enemyProfile.name}
-            className="w-8 h-8 flex-shrink-0 border border-red-500/70 object-cover [image-rendering:pixelated]"
-            referrerPolicy="no-referrer"
+          <div className="text-[10px] font-mono text-red-300 mt-0.5">{enemyHp}%</div>
+        </div>
+      </div>
+
+      {/* Row 2: Timer progress bar + scores + inline pause button */}
+      <div className="md:hidden flex-shrink-0 px-2 pt-1.5 pb-1 z-20 flex items-center gap-2">
+        <div className="flex-1 arcade-stat-bar h-2 overflow-hidden">
+          <motion.div
+            animate={{ scaleX: timerRatio, backgroundColor: timerCritical ? "#ef4444" : timerDanger ? "#fb923c" : "#22d3ee" }}
+            style={{ originX: 0 }}
+            transition={{ duration: reducedMotion ? 0.15 : 0.35 }}
+            className="h-full"
           />
         </div>
+        <span className="text-[10px] font-mono text-emerald-300 flex-shrink-0">✓{correctCount}</span>
+        <span className="text-[10px] font-mono text-red-300 flex-shrink-0">✗{wrongCount}</span>
+        <button
+          type="button"
+          onClick={() => setIsPaused((prev) => !prev)}
+          disabled={phase === "finished" || phase === "resolving"}
+          className="arcade-button px-2.5 py-1.5 flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {isPaused ? <Play className="w-3 h-3" /> : <Pause className="w-3 h-3" />}
+        </button>
       </div>
 
       {/* ══ Desktop HP bars (hidden on mobile, original 3-col layout) ══ */}
@@ -995,8 +1015,10 @@ const BattleStage = ({ character, onFinish, onBack }: { character: Character; on
                     {currentQuestion.meaning}
                   </p>
                   <div className={cn(
-                    "flex flex-wrap items-center justify-center gap-3 text-[11px] font-mono uppercase tracking-[0.3em] text-gray-500",
-                    isChoiceQuestion ? "mt-2 sm:mt-4" : "mt-2 sm:mt-6"
+                    "flex-wrap items-center justify-center gap-3 text-[11px] font-mono uppercase tracking-[0.3em] text-gray-500",
+                    isChoiceQuestion
+                      ? "flex mt-2 sm:mt-4"
+                      : "hidden sm:flex mt-2 sm:mt-6"
                   )}>
                     <Swords className="w-4 h-4" />
                     目標變化：<span className="text-white">{currentQuestion.promptLabel}</span>
@@ -1007,36 +1029,56 @@ const BattleStage = ({ character, onFinish, onBack }: { character: Character; on
               )}
             </motion.div>
 
+            {/* Mobile: 目標變化 card (shown only on mobile for input questions) */}
+            {currentQuestion.questionType !== "choice" && (
+              <div className="sm:hidden mb-2 arcade-frame px-4 py-3 text-center w-full">
+                <div className="text-[10px] font-mono text-gray-500 uppercase tracking-[0.3em] mb-1">目標變化</div>
+                <div className="text-base font-black text-white flex items-center justify-center gap-2">
+                  <Swords className="w-3.5 h-3.5 text-cyan-400" />
+                  {currentQuestion.promptLabel}
+                </div>
+                <div className="text-[10px] font-mono text-gray-600 mt-1">{currentQuestion.difficulty}</div>
+              </div>
+            )}
+
             <div className="relative z-20 w-full">
               {currentQuestion.questionType !== "choice" && (
                 <>
-                  <div className="mb-2 sm:mb-3 flex flex-col gap-1 text-xs font-mono text-gray-500 uppercase tracking-widest sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+                  <div className="hidden sm:flex mb-3 flex-col gap-1 text-xs font-mono text-gray-500 uppercase tracking-widest sm:flex-row sm:items-center sm:justify-between sm:gap-4">
                     <span>輸入作答</span>
                     <span className={cn(
-                      "hidden sm:inline transition-colors",
+                      "transition-colors",
                       timerCritical ? "text-red-400" : timerDanger ? "text-orange-300" : "text-gray-500"
                     )}>
                       {timerDanger ? "快作答，對手要壓上來了" : "答對就能先手壓制對手"}
                     </span>
                   </div>
                   <form onSubmit={handleSubmit}>
-                  <input
-                    ref={inputRef}
-                    type="text"
-                    inputMode="text"
-                    value={userInput}
-                    onChange={(e) => setUserInput(e.target.value)}
-                    disabled={phase !== "ready" || isPaused}
-                    className={cn(
-                      "w-full bg-white/10 border-2 p-3 sm:p-6 text-xl sm:text-4xl font-black text-white text-center transition-all duration-300 outline-none disabled:cursor-not-allowed",
-                      inputState === "success" ? "border-cyan-300 bg-cyan-400/10 shadow-[0_0_35px_rgba(34,211,238,0.22)]" :
-                      inputState === "failure" ? "border-red-500 bg-red-500/10 shadow-[0_0_35px_rgba(239,68,68,0.16)]" :
-                      inputState === "timeout" ? "border-orange-400 bg-orange-400/10 shadow-[0_0_35px_rgba(251,146,60,0.16)]" :
-                      "border-white/20 focus:border-cyan-400"
-                    )}
-                    placeholder="輸入變化..."
-                  />
-                </form>
+                    <input
+                      ref={inputRef}
+                      type="text"
+                      inputMode="text"
+                      value={userInput}
+                      onChange={(e) => setUserInput(e.target.value)}
+                      disabled={phase !== "ready" || isPaused}
+                      className={cn(
+                        "w-full bg-white/10 border-2 p-3 sm:p-6 text-xl sm:text-4xl font-black text-white text-center transition-all duration-300 outline-none disabled:cursor-not-allowed",
+                        inputState === "success" ? "border-cyan-300 bg-cyan-400/10 shadow-[0_0_35px_rgba(34,211,238,0.22)]" :
+                        inputState === "failure" ? "border-red-500 bg-red-500/10 shadow-[0_0_35px_rgba(239,68,68,0.16)]" :
+                        inputState === "timeout" ? "border-orange-400 bg-orange-400/10 shadow-[0_0_35px_rgba(251,146,60,0.16)]" :
+                        "border-white/20 focus:border-cyan-400"
+                      )}
+                      placeholder="輸入變化..."
+                    />
+                    {/* Mobile submit button */}
+                    <button
+                      type="submit"
+                      disabled={phase !== "ready" || isPaused}
+                      className="sm:hidden mt-2 w-full arcade-button py-3 text-sm font-black uppercase tracking-[0.22em] disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      送出答案
+                    </button>
+                  </form>
                 </>
               )}
             </div>
