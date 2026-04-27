@@ -727,9 +727,14 @@ const BattleStage = ({ character, onFinish, onBack }: { character: Character; on
       <div className="md:hidden flex-shrink-0 px-2 pt-2 pb-0 z-20 flex gap-1.5">
         {/* Player box */}
         <div className="arcade-frame flex-1 min-w-0 p-2">
-          <div className="text-[9px] font-mono text-gray-500 uppercase tracking-wider mb-0.5">玩家</div>
-          <div className="font-black text-white text-[11px] uppercase truncate">{character.name}</div>
-          <div className="arcade-stat-bar mt-1.5 h-1.5 overflow-hidden">
+          <div className="text-[9px] font-mono text-gray-500 uppercase tracking-wider mb-1">玩家</div>
+          <div className="flex items-center gap-1.5 mb-1">
+            <div className="w-8 h-8 flex-shrink-0 border border-cyan-400/60 overflow-hidden bg-black">
+              <img src={character.image} alt={character.name} className="w-full h-full object-cover [image-rendering:pixelated]" referrerPolicy="no-referrer" />
+            </div>
+            <div className="font-black text-white text-[11px] uppercase truncate">{character.name}</div>
+          </div>
+          <div className="arcade-stat-bar h-1.5 overflow-hidden">
             <motion.div
               animate={{ width: `${playerHp}%` }}
               transition={{ type: "spring", stiffness: 140, damping: 18 }}
@@ -760,9 +765,14 @@ const BattleStage = ({ character, onFinish, onBack }: { character: Character; on
 
         {/* Enemy box */}
         <div className="arcade-frame flex-1 min-w-0 p-2 text-right">
-          <div className="text-[9px] font-mono text-gray-500 uppercase tracking-wider mb-0.5">AI 對手</div>
-          <div className="font-black text-white text-[11px] uppercase truncate">{enemyProfile.name}</div>
-          <div className="arcade-stat-bar mt-1.5 h-1.5 overflow-hidden">
+          <div className="text-[9px] font-mono text-gray-500 uppercase tracking-wider mb-1">AI 對手</div>
+          <div className="flex items-center justify-end gap-1.5 mb-1">
+            <div className="font-black text-white text-[11px] uppercase truncate">{enemyProfile.name}</div>
+            <div className="w-8 h-8 flex-shrink-0 border border-red-500/60 overflow-hidden bg-black">
+              <img src={enemyProfile.image} alt={enemyProfile.name} className="w-full h-full object-cover [image-rendering:pixelated]" referrerPolicy="no-referrer" />
+            </div>
+          </div>
+          <div className="arcade-stat-bar h-1.5 overflow-hidden">
             <motion.div
               animate={{ width: `${enemyHp}%` }}
               transition={{ type: "spring", stiffness: 140, damping: 18 }}
