@@ -1,0 +1,13 @@
+node_modules/
+.DS_Store
+*.log
+dist/
+啟動遊戲.command
+啟動預覽伺服器.command
+上線到Railway.command
+上線步驟.md
+推送到GitHub.command
+推送更新.command
+UI Style/
+素材包/
+tests/
