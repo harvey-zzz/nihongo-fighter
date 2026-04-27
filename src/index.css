@@ -446,24 +446,76 @@ body::before {
 ruby {
   display: inline-block;
   position: relative;
+  /* Top padding = space for rt above the kanji. rt font-size is 0.5em,
+     so 0.62em gives ~0.12em breathing room — close but not touching. */
+  padding-top: 0.62em;
   line-height: 1;
 }
 
 ruby rt {
-  font-size: 0.5em;
+  font-size: 0.5em;      /* clearly smaller than the kanji */
+  font-weight: 400;      /* regular weight — not bold */
   position: absolute;
-  top: -0.6em;
+  top: 0;
   left: 0;
   right: 0;
   text-align: center;
   line-height: 1;
   color: inherit;
-  font-weight: 600;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.04em;
+  /* 2 px breathing room between furigana baseline and kanji cap */
+  margin-bottom: 2px;
 }
 
-/* Adjust ruby spacing for better readability in large text */
+/* Slightly tighter for the giant verb display headings (h4) */
+h4 ruby {
+  /* rt font-size is 0.38em, so 0.5em leaves ~0.12em gap */
+  padding-top: 0.5em;
+}
 h4 ruby rt {
-  font-size: 0.4em;
-  top: -0.65em;
+  font-size: 0.38em;
+  top: 0;
+}
+
+/* =========================================
+   RESULTS CAROUSEL
+   ========================================= */
+.results-carousel {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  gap: 12px;
+  padding: 0 1rem 8px;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.results-carousel::-webkit-scrollbar {
+  display: none;
+}
+.results-carousel .question-card {
+  flex: 0 0 90%;
+  scroll-snap-align: center;
+  border-radius: 4px;
+}
+@media (min-width: 768px) {
+  .results-carousel .question-card {
+    flex: 0 0 65%;
+  }
+}
+
+/* Carousel dot indicator */
+.carousel-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.25);
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
+  padding: 0;
+}
+.carousel-dot.active {
+  background: #00f5ff;
+  transform: scale(1.35);
+  box-shadow: 0 0 6px rgba(0,245,255,0.7);
 }

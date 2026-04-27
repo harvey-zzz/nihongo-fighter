@@ -46,42 +46,85 @@ function segmentJapaneseText(text) {
 }
 
 /**
- * Aligns kanji with their readings
- * Returns an array of { kanji: string, reading: string }
+ * Aligns kanji with their readings using suffix-stripping and look-ahead matching.
  *
- * This is a simple alignment: assumes hiragana readings follow kanji in order.
- * For more complex cases, you may need to implement a more sophisticated algorithm.
+ * Strategy:
+ *   1. Walk through segments in order, tracking remaining reading.
+ *   2. When a hiragana segment is encountered, strip it from the front of the
+ *      remaining reading (because it is already visible in the plain text).
+ *   3. When a kanji segment is encountered, look ahead to the next hiragana
+ *      segment and consume everything in the reading up to (but not including)
+ *      that hiragana — that portion belongs to the kanji.
+ *   4. The last kanji segment gets all remaining reading after stripping any
+ *      trailing okurigana that follow it.
+ *
+ * Examples:
+ *   始める / はじめる  → 始(はじ)める
+ *   覚える / おぼえる  → 覚(おぼ)える
+ *   引っ越す / ひっこす → 引(ひ)っ越(こ)す
+ *   乗り越える / のりこえる → 乗(の)り越(こ)える
  */
-function alignKanjiWithReadings(segments, hiraganaReading) {
+function alignKanjiWithReadings(segments, fullReading) {
   const kanjiSegments = segments.filter((s) => s.type === "kanji");
+  if (kanjiSegments.length === 0) return [];
+
   const alignments = [];
-  let readingIndex = 0;
+  let remaining = fullReading;
+  let kanjiIdx = 0;
 
-  for (const kanjiSeg of kanjiSegments) {
-    let reading = "";
-    const kanjiLength = kanjiSeg.text.length;
+  for (let i = 0; i < segments.length; i++) {
+    const seg = segments[i];
 
-    // Try to match syllables with kanji count
-    // This is a simplified approach: for each kanji, try to extract a reasonable reading
-    for (let i = 0; i < kanjiLength && readingIndex < hiraganaReading.length; i++) {
-      // Collect hiragana characters until we have enough (typically 2-3 per kanji)
-      // This is a heuristic and may need adjustment for complex words
-      const syllables = [];
-      while (readingIndex < hiraganaReading.length) {
-        const char = hiraganaReading[readingIndex];
-        // Small hiragana characters (ゃ, ゅ, ょ) are part of the previous syllable
-        const isSmall = ["ゃ", "ゅ", "ょ", "ァ", "ィ", "ゥ", "ェ", "ォ"].includes(char);
-        syllables.push(char);
-        readingIndex++;
-        if (!isSmall || syllables.length >= 2) break;
+    if (seg.type === "hiragana") {
+      // Strip this hiragana from the front of the remaining reading
+      if (remaining.startsWith(seg.text)) {
+        remaining = remaining.slice(seg.text.length);
       }
-      reading += syllables.join("");
-    }
+    } else if (seg.type === "kanji") {
+      // Look ahead: find the next hiragana segment (if any)
+      let nextHiragana = null;
+      for (let j = i + 1; j < segments.length; j++) {
+        if (segments[j].type === "hiragana") {
+          nextHiragana = segments[j].text;
+          break;
+        }
+      }
 
-    alignments.push({
-      kanji: kanjiSeg.text,
-      reading: reading || "",
-    });
+      const isLastKanji = kanjiIdx === kanjiSegments.length - 1;
+
+      if (nextHiragana && remaining.includes(nextHiragana)) {
+        // Consume everything in the reading up to (not including) the next hiragana
+        const idx = remaining.indexOf(nextHiragana);
+        alignments.push({ kanji: seg.text, reading: remaining.slice(0, idx) });
+        remaining = remaining.slice(idx);
+      } else if (isLastKanji) {
+        // Last kanji: strip any trailing okurigana that appear after it
+        let trailingSuffix = "";
+        for (let j = i + 1; j < segments.length; j++) {
+          if (segments[j].type === "hiragana") trailingSuffix += segments[j].text;
+        }
+        let kanjiReading = remaining;
+        if (trailingSuffix && remaining.endsWith(trailingSuffix)) {
+          kanjiReading = remaining.slice(0, remaining.length - trailingSuffix.length);
+        }
+        alignments.push({ kanji: seg.text, reading: kanjiReading });
+        remaining = "";
+      } else {
+        // Fallback: take one mora per kanji character from what remains
+        let reading = "";
+        let ri = 0;
+        for (let k = 0; k < seg.text.length && ri < remaining.length; k++) {
+          reading += remaining[ri++];
+          if (ri < remaining.length &&
+              ["ゃ", "ゅ", "ょ", "っ", "ァ", "ィ", "ゥ", "ェ", "ォ"].includes(remaining[ri])) {
+            reading += remaining[ri++];
+          }
+        }
+        alignments.push({ kanji: seg.text, reading });
+        remaining = remaining.slice(ri);
+      }
+      kanjiIdx++;
+    }
   }
 
   return alignments;

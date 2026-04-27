@@ -251,8 +251,8 @@ const CharacterSelect = ({
           })}
         </div>
 
-        {/* Preview Panel */}
-        <div className="w-full lg:w-1/2 relative overflow-hidden border-t lg:border-t-0 lg:border-l min-h-[24rem] md:min-h-[30rem] lg:min-h-0"
+        {/* Preview Panel — hidden on mobile, shown md+ */}
+        <div className="hidden md:block w-full lg:w-1/2 relative overflow-hidden border-t lg:border-t-0 lg:border-l min-h-[24rem] md:min-h-[30rem] lg:min-h-0"
              style={{ borderColor: "rgba(0,245,255,0.15)" }}>
           <AnimatePresence mode="wait">
             {hoveredChar && (() => {
@@ -676,7 +676,7 @@ const BattleStage = ({ character, onFinish, onBack }: { character: Character; on
   );
 
   return (
-    <div className={cn("min-h-screen w-full flex flex-col relative overflow-x-hidden overflow-y-auto xl:h-screen", battlePresentation.backdropClassName)}>
+    <div className={cn("h-[100dvh] w-full flex flex-col relative overflow-hidden md:min-h-screen md:h-auto md:overflow-x-hidden md:overflow-y-auto xl:h-screen xl:overflow-hidden", battlePresentation.backdropClassName)}>
       <AnimatePresence>
         {isPaused && (
           <motion.div
@@ -721,8 +721,65 @@ const BattleStage = ({ character, onFinish, onBack }: { character: Character; on
         </button>
       </div>
 
-      <div className="p-4 pt-20 md:p-6 md:pt-24 flex flex-col lg:flex-row justify-between items-stretch lg:items-start z-20 gap-4 md:gap-6">
-        <div className="arcade-frame w-full lg:w-1/3 flex items-start gap-4 p-3 md:p-4">
+      {/* ══ Mobile HP strip (hidden on md+) ══ */}
+      <div className="md:hidden flex-shrink-0 px-3 pt-12 pb-1 z-20 flex flex-col gap-0.5">
+        {/* Player row */}
+        <div className="flex items-center gap-2">
+          <img
+            src={character.image} alt={character.name}
+            className="w-8 h-8 flex-shrink-0 border border-cyan-400/70 object-cover [image-rendering:pixelated]"
+            referrerPolicy="no-referrer"
+          />
+          <span className="text-white font-black text-[11px] uppercase truncate flex-shrink-0 w-[4.5rem]">{character.name}</span>
+          <div className="flex-1 arcade-stat-bar h-2 overflow-hidden">
+            <motion.div
+              animate={{ width: `${playerHp}%` }}
+              transition={{ type: "spring", stiffness: 140, damping: 18 }}
+              className="h-full arcade-hp-player"
+            />
+          </div>
+          <span className="font-mono text-[10px] text-cyan-400 w-8 text-right flex-shrink-0">{playerHp}%</span>
+        </div>
+        {/* Timer compact row */}
+        <div className="flex items-center justify-center gap-3 py-0.5">
+          <span className="text-[10px] font-mono text-gray-500 uppercase tracking-widest">Rd.{round}</span>
+          <motion.span
+            animate={timerDanger && !reducedMotion ? { scale: [1, 1.12, 1] } : { scale: 1 }}
+            transition={timerDanger ? { repeat: Infinity, duration: timerCritical ? 0.55 : 0.9 } : { duration: 0.2 }}
+            className={cn(
+              "font-black text-sm leading-none flex items-center gap-1",
+              timerCritical ? "text-red-400" : timerDanger ? "text-orange-300" : "text-white"
+            )}
+          >
+            <Clock3 className="w-3 h-3" />{timeLeft}s
+          </motion.span>
+          <span className="text-[10px] font-mono text-emerald-300">✓{correctCount}</span>
+          <span className="text-[10px] font-mono text-red-300">✗{wrongCount}</span>
+        </div>
+        {/* Enemy row */}
+        <div className="flex items-center gap-2">
+          <span className="font-mono text-[10px] text-red-400 w-8 flex-shrink-0">{enemyHp}%</span>
+          <div className="flex-1 arcade-stat-bar h-2 overflow-hidden">
+            <motion.div
+              animate={{ width: `${enemyHp}%` }}
+              transition={{ type: "spring", stiffness: 140, damping: 18 }}
+              className="h-full arcade-hp-enemy"
+            />
+          </div>
+          <span className="text-white font-black text-[11px] uppercase truncate flex-shrink-0 w-[4.5rem] text-right">{enemyProfile.name}</span>
+          <img
+            src={enemyProfile.image} alt={enemyProfile.name}
+            className="w-8 h-8 flex-shrink-0 border border-red-500/70 object-cover [image-rendering:pixelated]"
+            referrerPolicy="no-referrer"
+          />
+        </div>
+      </div>
+
+      {/* ══ Desktop HP bars (hidden on mobile, original 3-col layout) ══ */}
+      <div className="hidden md:flex flex-shrink-0 p-6 pt-24 flex-row justify-between items-start z-20 gap-6">
+
+        {/* ── Player HP ── */}
+        <div className="arcade-frame w-1/3 flex items-start gap-4 p-3 md:p-4">
           <div className="w-16 h-16 border-2 border-cyan-400 overflow-hidden bg-black flex-shrink-0">
             <img src={character.image} alt={character.name} className="w-full h-full object-cover [image-rendering:pixelated]" referrerPolicy="no-referrer" />
           </div>
@@ -747,6 +804,7 @@ const BattleStage = ({ character, onFinish, onBack }: { character: Character; on
           </div>
         </div>
 
+        {/* ── Timer ── */}
         <motion.div
           animate={timerDanger && !reducedMotion ? { scale: [1, 1.05, 1] } : { scale: 1 }}
           transition={timerDanger ? { repeat: Infinity, duration: timerCritical ? 0.6 : 1 } : { duration: 0.2 }}
@@ -764,12 +822,8 @@ const BattleStage = ({ character, onFinish, onBack }: { character: Character; on
             </div>
             <div className={cn(
               "text-5xl font-black italic leading-none",
-              timerCritical ? "text-red-400" :
-              timerDanger ? "text-orange-300" :
-              "text-white"
-            )}>
-              {timeLeft}s
-            </div>
+              timerCritical ? "text-red-400" : timerDanger ? "text-orange-300" : "text-white"
+            )}>{timeLeft}s</div>
           </div>
           <div className="arcade-stat-bar mt-3 h-2 w-full max-w-52 overflow-hidden">
             <motion.div
@@ -789,7 +843,8 @@ const BattleStage = ({ character, onFinish, onBack }: { character: Character; on
           </div>
         </motion.div>
 
-        <div className="arcade-frame w-full lg:w-1/3 flex items-start gap-4 text-right p-3 md:p-4">
+        {/* ── Enemy HP ── */}
+        <div className="arcade-frame w-1/3 flex items-start gap-4 text-right p-3 md:p-4">
           <div className="flex-1">
             <div className="flex justify-between mb-1">
               <span className="text-red-500 font-mono text-sm">血量 {enemyHp}%</span>
@@ -815,44 +870,10 @@ const BattleStage = ({ character, onFinish, onBack }: { character: Character; on
         </div>
       </div>
 
-      <div className="flex-1 flex items-start xl:items-center justify-center relative min-h-0 pb-6">
-        <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-cyan-500/20 via-transparent to-transparent"></div>
-        <div className="relative z-10 grid w-full grid-cols-1 gap-4 px-4 py-2 md:gap-6 md:px-6 lg:grid-cols-2 xl:grid-cols-[minmax(0,16rem)_minmax(0,1fr)_minmax(0,16rem)] 2xl:grid-cols-[minmax(0,20rem)_minmax(0,1fr)_minmax(0,20rem)] xl:gap-6 xl:px-6 2xl:gap-8 2xl:px-8">
-          <motion.div
-            animate={
-              reducedMotion ? { opacity: 1 } :
-              turnFeedback?.attacker === "player" ? (useLightweightChoiceFeedback ? { x: [0, 14, 0] } : { x: [0, 26, 0], scale: [1, 1.04, 1] }) :
-              turnFeedback?.target === "player" ? (useLightweightChoiceFeedback ? { x: [0, -6, 6, 0] } : { x: [0, -10, 10, -6, 0], rotate: [0, -1, 1, 0] }) :
-              { x: 0, scale: 1, rotate: 0 }
-            }
-            transition={{ duration: useLightweightChoiceFeedback ? 0.24 : 0.55, ease: [0.22, 1, 0.36, 1] }}
-            className="relative justify-self-center lg:justify-self-end order-2 lg:order-2 xl:order-1"
-          >
-            <div className={cn("absolute inset-0 bg-cyan-400/15", useLightweightChoiceFeedback ? "blur-xl opacity-70" : "blur-3xl")}></div>
-            <img
-              src={character.image}
-              alt={character.name}
-              className={cn(
-                "relative h-[12rem] sm:h-[16rem] lg:h-[20rem] xl:h-[24rem] max-w-full w-auto object-contain [image-rendering:pixelated] drop-shadow-[0_18px_40px_rgba(34,211,238,0.28)]",
-                turnFeedback?.target === "player" && "brightness-125 saturate-150",
-              )}
-              referrerPolicy="no-referrer"
-            />
-            <AnimatePresence>
-              {turnFeedback?.attacker === "player" && (
-                <motion.div
-                  initial={{ opacity: 0, y: 24 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0 }}
-                  className="absolute -right-4 top-10 rounded-full border border-cyan-300/40 bg-cyan-400/20 px-4 py-2 text-xs font-mono uppercase tracking-[0.3em] text-cyan-100"
-                >
-                  Slash
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </motion.div>
-
-          <div className="relative z-10 isolate flex max-h-full flex-col items-center w-full max-w-3xl xl:max-w-2xl justify-self-center order-1 lg:order-1 lg:col-span-2 xl:order-2 xl:col-span-1 overflow-visible">
+      <div className="flex-1 min-h-0 overflow-y-auto flex items-start xl:items-center justify-center relative pb-3 md:pb-6">
+        <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-cyan-500/20 via-transparent to-transparent pointer-events-none"></div>
+        <div className="relative z-10 flex w-full justify-center px-3 py-2 md:px-6 xl:px-8">
+          <div className="relative z-10 isolate flex flex-col items-center w-full max-w-3xl overflow-visible">
             <motion.div
               key={`${currentQuestion.id}-${questionNonce}`}
               initial={reducedMotion ? false : { scale: 0.94, opacity: 0, y: 16 }}
@@ -861,7 +882,7 @@ const BattleStage = ({ character, onFinish, onBack }: { character: Character; on
               transition={{ duration: 0.35 }}
               className={cn(
                 "arcade-frame relative z-10 w-full text-center",
-                isChoiceQuestion ? "mb-4 p-4 sm:p-6 lg:p-7" : "mb-6 p-5 sm:p-8 lg:p-10"
+                isChoiceQuestion ? "mb-3 p-3 sm:p-6 lg:p-7" : "mb-3 p-4 sm:p-8 lg:p-10"
               )}
             >
               {/* 答題回饋覆蓋層 — 疊在題目框上，版面完全不位移 */}
@@ -907,35 +928,35 @@ const BattleStage = ({ character, onFinish, onBack }: { character: Character; on
                 )}
               </AnimatePresence>
               {isChoiceQuestion ? (
-                <div className="space-y-5 text-left">
+                <div className="space-y-2 sm:space-y-5 text-left">
                   <div>
                     <div className="text-[11px] font-mono uppercase tracking-[0.32em] text-cyan-400">題目指示</div>
-                    <div className="mt-2 text-xl sm:text-2xl font-black text-white">
+                    <div className="mt-1 sm:mt-2 text-base sm:text-2xl font-black text-white">
                       從這組配對中選出 <span className="text-cyan-300">{currentQuestion.promptLabel}</span>
                     </div>
                   </div>
-                  <div className="text-sm sm:text-base leading-7 text-gray-400">
+                  <div className="hidden sm:block text-sm sm:text-base leading-7 text-gray-400">
                     快速判斷哪個是符合題意的動詞，選錯或超時都會被反擊。
                   </div>
                   <div>
                     <div className="text-[11px] font-mono uppercase tracking-[0.32em] text-cyan-400">當前題目</div>
-                    <h4 className="mt-3 font-black text-white break-all text-4xl sm:text-5xl lg:text-6xl xl:text-7xl text-center">
+                    <h4 className="mt-2 font-black text-white break-all text-3xl sm:text-5xl lg:text-6xl xl:text-7xl text-center">
                       {currentQuestion.sourceVerbId && currentQuestion.sourceVerbId.toString().startsWith('bank-') ?
                         renderWithFuriganaJSX(currentQuestion.dictionary_form, currentQuestion.reading || "") :
                         currentQuestion.dictionary_form
                       }
                     </h4>
-                    <p className="mt-3 text-center text-base sm:text-xl lg:text-2xl text-gray-400 italic">{currentQuestion.meaning}</p>
+                    <p className="mt-1 sm:mt-3 text-center text-sm sm:text-xl lg:text-2xl text-gray-400 italic">{currentQuestion.meaning}</p>
                   </div>
-                  <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4 text-[11px] font-mono uppercase tracking-[0.28em] text-gray-500">
+                  <div className="flex flex-col items-start gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-4 text-[11px] font-mono uppercase tracking-[0.28em] text-gray-500">
                     <div className="flex items-center gap-2">
-                      <Swords className="w-4 h-4" />
+                      <Swords className="w-3 h-3 sm:w-4 sm:h-4" />
                       <span>自他動詞辨識 / {currentQuestion.difficulty}</span>
                     </div>
-                    <span>{timeRule}</span>
+                    <span className="hidden sm:inline">{timeRule}</span>
                   </div>
-                  {/* 選擇按鈕：縮小後放入題目框 */}
-                  <div className="grid grid-cols-2 gap-2 sm:gap-3 pt-1">
+                  {/* 選擇按鈕 */}
+                  <div className="grid grid-cols-2 gap-2 sm:gap-3 pt-0.5 sm:pt-1">
                     {currentQuestion.options?.map((option) => (
                       <button
                         key={option}
@@ -943,7 +964,7 @@ const BattleStage = ({ character, onFinish, onBack }: { character: Character; on
                         onClick={() => handleChoiceSelection(option)}
                         disabled={phase !== "ready" || isPaused}
                         className={cn(
-                          "arcade-button w-full min-h-[52px] border-2 px-3 py-2 text-center text-lg sm:text-xl font-black tracking-[0.06em] text-white transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-45 focus:outline-none focus:ring-2 focus:ring-cyan-300/70",
+                          "arcade-button w-full min-h-[42px] sm:min-h-[52px] border-2 px-3 py-2 text-center text-base sm:text-xl font-black tracking-[0.06em] text-white transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-45 focus:outline-none focus:ring-2 focus:ring-cyan-300/70",
                           inputState === "success" ? "border-cyan-300 bg-cyan-400/10 shadow-[0_0_28px_rgba(34,211,238,0.22)]" :
                           inputState === "failure" ? "border-red-500 bg-red-500/10 shadow-[0_0_28px_rgba(239,68,68,0.16)]" :
                           inputState === "timeout" ? "border-orange-400 bg-orange-400/10 shadow-[0_0_28px_rgba(251,146,60,0.16)]" :
@@ -957,25 +978,25 @@ const BattleStage = ({ character, onFinish, onBack }: { character: Character; on
                 </div>
               ) : (
                 <>
-                  <div className={cn("flex items-center justify-between gap-4", isChoiceQuestion ? "mb-4" : "mb-6")}>
-                    <div className="text-sm font-mono text-cyan-400 uppercase tracking-[0.3em]">當前動詞</div>
-                    <div className="text-[11px] font-mono text-gray-500 uppercase tracking-[0.25em] text-right">{timeRule}</div>
+                  <div className={cn("flex items-center justify-between gap-4", isChoiceQuestion ? "mb-3 sm:mb-4" : "mb-2 sm:mb-6")}>
+                    <div className="text-[11px] sm:text-sm font-mono text-cyan-400 uppercase tracking-[0.3em]">當前動詞</div>
+                    <div className="hidden sm:block text-[11px] font-mono text-gray-500 uppercase tracking-[0.25em] text-right">{timeRule}</div>
                   </div>
                   <h4 className={cn(
                     "font-black text-white break-all",
-                    isChoiceQuestion ? "mb-3 text-4xl sm:text-5xl lg:text-6xl xl:text-7xl" : "mb-4 text-4xl sm:text-5xl lg:text-6xl xl:text-8xl"
+                    isChoiceQuestion ? "mb-3 text-3xl sm:text-5xl lg:text-6xl xl:text-7xl" : "mb-2 sm:mb-4 text-4xl sm:text-5xl lg:text-6xl xl:text-8xl"
                   )}>
                     {currentQuestion.sourceVerbId && currentQuestion.sourceVerbId.toString().startsWith('bank-') ?
                       renderWithFuriganaJSX(currentQuestion.dictionary_form, currentQuestion.reading || "") :
                       currentQuestion.dictionary_form
                     }
                   </h4>
-                  <p className={cn("text-gray-400 italic", isChoiceQuestion ? "text-base sm:text-xl" : "text-base sm:text-xl lg:text-2xl")}>
+                  <p className={cn("text-gray-400 italic", isChoiceQuestion ? "text-sm sm:text-xl" : "text-sm sm:text-xl lg:text-2xl")}>
                     {currentQuestion.meaning}
                   </p>
                   <div className={cn(
                     "flex flex-wrap items-center justify-center gap-3 text-[11px] font-mono uppercase tracking-[0.3em] text-gray-500",
-                    isChoiceQuestion ? "mt-4" : "mt-6"
+                    isChoiceQuestion ? "mt-2 sm:mt-4" : "mt-2 sm:mt-6"
                   )}>
                     <Swords className="w-4 h-4" />
                     目標變化：<span className="text-white">{currentQuestion.promptLabel}</span>
@@ -989,10 +1010,10 @@ const BattleStage = ({ character, onFinish, onBack }: { character: Character; on
             <div className="relative z-20 w-full">
               {currentQuestion.questionType !== "choice" && (
                 <>
-                  <div className="mb-3 flex flex-col gap-2 text-xs font-mono text-gray-500 uppercase tracking-widest sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+                  <div className="mb-2 sm:mb-3 flex flex-col gap-1 text-xs font-mono text-gray-500 uppercase tracking-widest sm:flex-row sm:items-center sm:justify-between sm:gap-4">
                     <span>輸入作答</span>
                     <span className={cn(
-                      "transition-colors",
+                      "hidden sm:inline transition-colors",
                       timerCritical ? "text-red-400" : timerDanger ? "text-orange-300" : "text-gray-500"
                     )}>
                       {timerDanger ? "快作答，對手要壓上來了" : "答對就能先手壓制對手"}
@@ -1002,11 +1023,12 @@ const BattleStage = ({ character, onFinish, onBack }: { character: Character; on
                   <input
                     ref={inputRef}
                     type="text"
+                    inputMode="text"
                     value={userInput}
                     onChange={(e) => setUserInput(e.target.value)}
                     disabled={phase !== "ready" || isPaused}
                     className={cn(
-                      "w-full bg-white/10 border-2 p-4 sm:p-6 text-2xl sm:text-4xl font-black text-white text-center transition-all duration-300 outline-none disabled:cursor-not-allowed",
+                      "w-full bg-white/10 border-2 p-3 sm:p-6 text-xl sm:text-4xl font-black text-white text-center transition-all duration-300 outline-none disabled:cursor-not-allowed",
                       inputState === "success" ? "border-cyan-300 bg-cyan-400/10 shadow-[0_0_35px_rgba(34,211,238,0.22)]" :
                       inputState === "failure" ? "border-red-500 bg-red-500/10 shadow-[0_0_35px_rgba(239,68,68,0.16)]" :
                       inputState === "timeout" ? "border-orange-400 bg-orange-400/10 shadow-[0_0_35px_rgba(251,146,60,0.16)]" :
@@ -1019,52 +1041,6 @@ const BattleStage = ({ character, onFinish, onBack }: { character: Character; on
               )}
             </div>
           </div>
-
-            <motion.div
-              animate={
-                reducedMotion ? { opacity: 1 } :
-              turnFeedback?.attacker === "enemy" ? (useLightweightChoiceFeedback ? { x: [0, -14, 0] } : { x: [0, -26, 0], scale: [1, 1.04, 1] }) :
-              turnFeedback?.target === "enemy" ? (useLightweightChoiceFeedback ? { x: [0, 6, -6, 0] } : { x: [0, 10, -10, 6, 0], rotate: [0, 1, -1, 0] }) :
-              { x: 0, scale: 1, rotate: 0 }
-            }
-            transition={{ duration: useLightweightChoiceFeedback ? 0.24 : 0.55, ease: [0.22, 1, 0.36, 1] }}
-            className="relative justify-self-center lg:justify-self-start order-3 lg:order-3 xl:order-3"
-          >
-            <div className={cn("absolute inset-0 bg-red-500/15", useLightweightChoiceFeedback ? "blur-xl opacity-70" : "blur-3xl")}></div>
-            <img
-              src={enemyProfile.image}
-              alt={enemyProfile.name}
-              className={cn(
-                "relative h-[12rem] sm:h-[16rem] lg:h-[20rem] xl:h-[24rem] max-w-full w-auto object-contain [image-rendering:pixelated] drop-shadow-[0_18px_40px_rgba(239,68,68,0.22)]",
-                turnFeedback?.target === "enemy" && "brightness-110 saturate-125"
-              )}
-              referrerPolicy="no-referrer"
-            />
-            <AnimatePresence>
-              {aiRoundState?.status === "thinking" && (
-                <motion.div
-                  initial={{ opacity: 0, y: 18 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0 }}
-                  className="absolute left-1/2 top-4 -translate-x-1/2 rounded-full border border-red-300/30 bg-black/60 px-4 py-2 text-xs font-mono uppercase tracking-[0.3em] text-red-100"
-                >
-                  AI Thinking...
-                </motion.div>
-              )}
-            </AnimatePresence>
-            <AnimatePresence>
-              {turnFeedback?.attacker === "enemy" && (
-                <motion.div
-                  initial={{ opacity: 0, y: 24 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0 }}
-                  className="absolute -left-4 top-10 rounded-full border border-red-300/40 bg-red-500/20 px-4 py-2 text-xs font-mono uppercase tracking-[0.3em] text-red-100"
-                >
-                  Counter
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </motion.div>
         </div>
       </div>
 
@@ -1082,18 +1058,70 @@ const ReviewSection = ({
   items: BattleReviewItem[];
   accentClass: string;
   icon: React.ReactNode;
-}) => (
+}) => {
+  const carouselRef = useRef<HTMLDivElement>(null);
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  const scrollToIndex = (idx: number) => {
+    const el = carouselRef.current;
+    if (!el) return;
+    const card = el.children[idx] as HTMLElement;
+    if (!card) return;
+    el.scrollTo({ left: card.offsetLeft - el.offsetLeft, behavior: "smooth" });
+  };
+
+  const handleScroll = () => {
+    const el = carouselRef.current;
+    if (!el) return;
+    const card = el.children[0] as HTMLElement;
+    if (!card) return;
+    const cardWidth = card.offsetWidth + 12; // gap-3 = 12px
+    const idx = Math.round(el.scrollLeft / cardWidth);
+    setActiveIndex(Math.min(Math.max(idx, 0), items.length - 1));
+  };
+
+  return (
   <section className="arcade-frame p-5 md:p-6">
-    <div className="flex items-center gap-3 mb-4">
-      <div className={cn("flex h-10 w-10 items-center justify-center rounded-full border", accentClass)}>{icon}</div>
-      <div>
-        <div className="arcade-panel-heading">{title}</div>
-        <div className="text-sm text-gray-400">{items.length} 題</div>
+    <div className="flex items-center justify-between gap-3 mb-4">
+      <div className="flex items-center gap-3">
+        <div className={cn("flex h-10 w-10 items-center justify-center rounded-full border flex-shrink-0", accentClass)}>{icon}</div>
+        <div>
+          <div className="arcade-panel-heading">{title}</div>
+          <div className="text-sm text-gray-400">{items.length} 題</div>
+        </div>
       </div>
+      {/* Desktop arrow navigation */}
+      {items.length > 1 && (
+        <div className="hidden md:flex items-center gap-2">
+          <button
+            onClick={() => scrollToIndex(Math.max(activeIndex - 1, 0))}
+            disabled={activeIndex === 0}
+            className="arcade-button px-3 py-2 disabled:opacity-30"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+          <span className="text-[10px] font-mono text-gray-500 uppercase tracking-widest">
+            {activeIndex + 1} / {items.length}
+          </span>
+          <button
+            onClick={() => scrollToIndex(Math.min(activeIndex + 1, items.length - 1))}
+            disabled={activeIndex === items.length - 1}
+            className="arcade-button px-3 py-2 disabled:opacity-30"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
+      )}
     </div>
-    <div className="space-y-4">
+
+    {/* Carousel */}
+    <div
+      ref={carouselRef}
+      className="results-carousel"
+      onScroll={handleScroll}
+    >
       {items.map((item) => (
-        <article key={item.question.id} className="border border-white/10 bg-black/30 p-4 md:p-5">
+        <article key={item.question.id} className="question-card border border-white/10 bg-black/30 p-4 md:p-5">
           <div className="flex flex-wrap items-center gap-2 text-[10px] font-mono uppercase tracking-[0.28em] text-gray-500">
             <span className="font-black text-white">
               {item.question.sourceVerbId && item.question.sourceVerbId.toString().startsWith('bank-') ?
@@ -1142,8 +1170,23 @@ const ReviewSection = ({
         </article>
       ))}
     </div>
+
+    {/* Dot indicators */}
+    {items.length > 1 && (
+      <div className="flex justify-center gap-2 mt-4">
+        {items.map((_, i) => (
+          <button
+            key={i}
+            onClick={() => scrollToIndex(i)}
+            className={cn("carousel-dot", i === activeIndex ? "active" : "")}
+            aria-label={`第 ${i + 1} 題`}
+          />
+        ))}
+      </div>
+    )}
   </section>
-);
+  );
+};
 
 const ResultScreen = ({
   result,

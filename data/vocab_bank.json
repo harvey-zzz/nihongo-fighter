@@ -17641,12 +17641,12 @@
   },
   {
     "id": 253,
-    "word": "貧か",
-    "reading": "まずしい（貧しい）",
-    "meaning": "貧困（※注：貧しい是い形）",
+    "word": "貧しい",
+    "reading": "まずしい",
+    "meaning": "貧困的",
     "group": "na_adj",
     "jlpt": "N3",
-    "type": "na_adj",
+    "type": "i_adj",
     "questions": [
       {
         "questionType": "na_adj_conjugation",
