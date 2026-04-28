@@ -746,7 +746,7 @@ const BattleStage = ({ character, onFinish, onBack }: { character: Character; on
 
         {/* Timer center box */}
         <div className={cn(
-          "arcade-frame flex-shrink-0 w-[4.5rem] p-2 text-center",
+          "arcade-frame flex-shrink-0 w-[5rem] p-2 text-center",
           timerCritical ? "border-red-500" : timerDanger ? "border-orange-400" : ""
         )}>
           <div className="text-[9px] font-mono text-gray-400 uppercase">本題倒數</div>
@@ -912,7 +912,7 @@ const BattleStage = ({ character, onFinish, onBack }: { character: Character; on
               transition={{ duration: 0.35 }}
               className={cn(
                 "arcade-frame relative z-10 w-full text-center",
-                isChoiceQuestion ? "mb-3 p-3 sm:p-6 lg:p-7" : "mb-3 p-4 sm:p-8 lg:p-10"
+                isChoiceQuestion ? "mb-2 p-3 sm:p-6 lg:p-7" : "mb-2 px-4 py-3 sm:p-8 lg:p-10"
               )}
             >
               {/* 答題回饋覆蓋層 — 疊在題目框上，版面完全不位移 */}
@@ -1014,7 +1014,7 @@ const BattleStage = ({ character, onFinish, onBack }: { character: Character; on
                   </div>
                   <h4 className={cn(
                     "font-black text-white break-all",
-                    isChoiceQuestion ? "mb-3 text-3xl sm:text-5xl lg:text-6xl xl:text-7xl" : "mb-2 sm:mb-4 text-4xl sm:text-5xl lg:text-6xl xl:text-8xl"
+                    isChoiceQuestion ? "mb-3 text-3xl sm:text-5xl lg:text-6xl xl:text-7xl" : "mb-1 sm:mb-4 text-3xl sm:text-5xl lg:text-6xl xl:text-8xl"
                   )}>
                     {currentQuestion.sourceVerbId && currentQuestion.sourceVerbId.toString().startsWith('bank-') ?
                       renderWithFuriganaJSX(currentQuestion.dictionary_form, currentQuestion.reading || "") :
@@ -1072,7 +1072,7 @@ const BattleStage = ({ character, onFinish, onBack }: { character: Character; on
                       onChange={(e) => setUserInput(e.target.value)}
                       disabled={phase !== "ready" || isPaused}
                       className={cn(
-                        "w-full bg-white/10 border-2 p-3 sm:p-6 text-xl sm:text-4xl font-black text-white text-center transition-all duration-300 outline-none disabled:cursor-not-allowed",
+                        "w-full bg-white/10 border-2 p-2.5 sm:p-6 text-xl sm:text-4xl font-black text-white text-center transition-all duration-300 outline-none disabled:cursor-not-allowed",
                         inputState === "success" ? "border-cyan-300 bg-cyan-400/10 shadow-[0_0_35px_rgba(34,211,238,0.22)]" :
                         inputState === "failure" ? "border-red-500 bg-red-500/10 shadow-[0_0_35px_rgba(239,68,68,0.16)]" :
                         inputState === "timeout" ? "border-orange-400 bg-orange-400/10 shadow-[0_0_35px_rgba(251,146,60,0.16)]" :

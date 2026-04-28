@@ -1,0 +1,10 @@
+# Nihongo Fighter — Railway deployment config
+# We commit pre-built dist/ so Railway only needs to install serve, not rebuild
+[phases.install]
+cmds = ["npm install --omit=dev"]
+
+[phases.build]
+cmds = []
+
+[start]
+cmd = "npx serve dist -s -l $PORT"

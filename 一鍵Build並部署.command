@@ -19,27 +19,9 @@ echo ""
 
 # ── 步驟 2：刪除不必要的舊檔案 ──────────────
 echo "【2/6】刪除不必要的舊檔案..."
-
-if [ -f "server.ts" ]; then
-  rm -f server.ts
-  echo "   🗑️  server.ts（舊後端，已改純前端）"
-fi
-
-if [ -f "src/lib/analytics.js" ]; then
-  rm -f src/lib/analytics.js
-  echo "   🗑️  src/lib/analytics.js（未使用）"
-fi
-
-if [ -f "tests/server-port.test.mjs" ]; then
-  rm -f tests/server-port.test.mjs
-  echo "   🗑️  tests/server-port.test.mjs（測試舊 server）"
-fi
-
-if [ -f "上線步驟.md" ]; then
-  rm -f 上線步驟.md
-  echo "   🗑️  上線步驟.md（已過時）"
-fi
-
+for f in server.ts src/lib/analytics.js tests/server-port.test.mjs 上線步驟.md; do
+  [ -f "$f" ] && rm -f "$f" && echo "   🗑️  $f"
+done
 echo "✅ 清理完成"
 echo ""
 
@@ -67,10 +49,7 @@ echo ""
 # ── 步驟 5：Commit ───────────────────────────
 echo "【5/6】Commit 全部更新..."
 git add -A
-git commit -m "清理舊檔 + 部署更新：pre-built dist + 手機版改動
-
-移除：server.ts / analytics.js / server-port 測試
-包含：手機版三格HP、目標卡、送出按鈕、振り仮名修正
+git commit -m "部署更新 $(date '+%Y-%m-%d %H:%M')
 
 Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>"
 if [ $? -ne 0 ]; then
@@ -79,8 +58,8 @@ fi
 echo "✅ 完成"
 echo ""
 
-# ── 步驟 6：推送 + Railway 部署 ──────────────
-echo "【6/6】推送到 GitHub + 觸發 Railway 部署..."
+# ── 步驟 6：推送到 GitHub ─────────────────────
+echo "【6/6】推送到 GitHub..."
 git push origin main
 if [ $? -ne 0 ]; then
   echo "❌ 推送失敗，請檢查網路連線"
@@ -88,16 +67,34 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 echo "✅ 推送成功！"
+echo ""
 
+# ── Railway 部署（三種方式自動嘗試）──────────
+echo "── Railway 部署 ──"
+
+# 方式一：Railway CLI（最快）
 if command -v railway &>/dev/null; then
-  echo "正在觸發 Railway 重新部署..."
-  railway up --detach 2>/dev/null
-  echo "✅ Railway 部署中"
+  echo "✅ Railway CLI 已安裝，正在部署..."
+  railway up --detach
+  if [ $? -eq 0 ]; then
+    echo "✅ Railway 部署觸發成功！"
+  else
+    echo "⚠️  railway up 失敗，請確認 railway login 已完成"
+    echo "   手動指令：railway login 然後 railway up"
+  fi
+else
+  echo "ℹ️  Railway CLI 未安裝"
+  echo "   已推送到 GitHub，GitHub Actions 會自動觸發部署"
+  echo ""
+  echo "   如果 GitHub Actions 沒有設定，請手動操作："
+  echo "   1. 開啟 https://railway.app/dashboard"
+  echo "   2. 找到 nihongo-fighter 專案"
+  echo "   3. 點 Deploy → 選 Redeploy"
 fi
 
 echo ""
 echo "╔════════════════════════════════════════╗"
-echo "║  🎉 全部完成！約 2-3 分鐘後可測試     ║"
+echo "║  完成！約 2-3 分鐘後可測試            ║"
 echo "║  https://lavish-gratitude-production-  ║"
 echo "║  74e9.up.railway.app/                  ║"
 echo "╚════════════════════════════════════════╝"
