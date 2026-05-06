@@ -93,10 +93,26 @@ function alignKanjiWithReadings(segments, fullReading) {
       const isLastKanji = kanjiIdx === kanjiSegments.length - 1;
 
       if (nextHiragana && remaining.includes(nextHiragana)) {
-        // Consume everything in the reading up to (not including) the next hiragana
-        const idx = remaining.indexOf(nextHiragana);
-        alignments.push({ kanji: seg.text, reading: remaining.slice(0, idx) });
-        remaining = remaining.slice(idx);
+        // Consume everything in the reading up to (not including) the next hiragana.
+        // Start search from index 1 so the kanji always gets at least one mora
+        // (fixes words like 痛い/いたい where the suffix い also starts the reading).
+        const idx = remaining.indexOf(nextHiragana, 1);
+        if (idx > 0) {
+          alignments.push({ kanji: seg.text, reading: remaining.slice(0, idx) });
+          remaining = remaining.slice(idx);
+        } else {
+          // idx === -1 or 0 — fall through to last-kanji handling
+          let trailingSuffix = "";
+          for (let j = i + 1; j < segments.length; j++) {
+            if (segments[j].type === "hiragana") trailingSuffix += segments[j].text;
+          }
+          let kanjiReading = remaining;
+          if (trailingSuffix && remaining.endsWith(trailingSuffix)) {
+            kanjiReading = remaining.slice(0, remaining.length - trailingSuffix.length);
+          }
+          alignments.push({ kanji: seg.text, reading: kanjiReading });
+          remaining = "";
+        }
       } else if (isLastKanji) {
         // Last kanji: strip any trailing okurigana that appear after it
         let trailingSuffix = "";
